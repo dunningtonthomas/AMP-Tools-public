@@ -81,9 +81,17 @@ void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& prob
             double dist_to_goal = (vertex - problem.q_goal).norm();
         }    
     }
-    
 }
 
+void MyBugAlgorithm::rotateHeading(double anlge) {
+    // Rotate the heading by the angle
+    double x = heading.x() * cos(anlge) - heading.y() * sin(anlge);
+    double y = heading.x() * sin(anlge) + heading.y() * cos(anlge);
+    heading = Eigen::Vector2d(x, y);
+
+    // Set the right_heading
+    right_heading = Eigen::Vector2d(heading.y(), -heading.x());
+}
 
 
 bool MyBugAlgorithm::inCollision(const amp::Problem2D& problem, Eigen::Vector2d dir) {
@@ -92,17 +100,16 @@ bool MyBugAlgorithm::inCollision(const amp::Problem2D& problem, Eigen::Vector2d 
     Eigen::Vector2d next_pos = current_position + dir;
     // std::cout << "Current pos: " << current_position.x() << " " << current_position.y() << std::endl;
     // std::cout << "Next pos: " << next_pos.x() << " " << next_pos.y() << std::endl;
-    //return false;
 
     for(const auto& obstacle : problem.obstacles) {
         std::vector<Eigen::Vector2d> vertices = obstacle.verticesCW();   // Clockwise vertices
         for(int i = 0; i < vertices.size(); i++) {
             // Get points clockwise around the obstacle
-            Eigen::Vector2d p1 = vertices[i];
-            Eigen::Vector2d p2 = vertices[(i + 1) % vertices.size()];
+            Eigen::Vector2d p2 = vertices[i];
+            Eigen::Vector2d q2 = vertices[(i + 1) % vertices.size()];
 
             // Check if the heading intersects with the obstacle
-            if(intersect(current_position, next_pos, p1, p2)) {
+            if(intersect(current_position, next_pos, p2, q2)) {
                 return true;
             }
         }
