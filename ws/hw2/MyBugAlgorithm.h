@@ -10,12 +10,17 @@ class MyBugAlgorithm : public amp::BugAlgorithm {
         virtual amp::Path2D plan(const amp::Problem2D& problem) override;
 
         // Add any other methods here...
-        bool inCollision(Eigen::Vector2d point, const amp::Problem2D& problem, double step_size);
+        bool inCollision(const amp::Problem2D& problem, double step_size);
 
-        void moveToGoal(const Eigen::Vector2d& goal, amp::Path2D& path, const amp::Problem2D& problem);
-        void handleCollision(const Eigen::Vector2d& goal, amp::Path2D& path, const amp::Problem2D& problem);
-        void Bug1Traversal(amp::Path2D& path, const amp::Problem2D& problem, std::vector<Eigen::Vector2d>& vertices);
+        //void moveToGoal(const Eigen::Vector2d& goal, amp::Path2D& path, const amp::Problem2D& problem);
+        //void handleCollision(const Eigen::Vector2d& goal, amp::Path2D& path, const amp::Problem2D& problem);
+        void Bug1Traversal(amp::Path2D& path, const amp::Problem2D& problem);
 
     private:
-        // Add any member variables here...
+
+        double step_size = 0.1;
+        Eigen::Vector2d current_position;
+        Eigen::Vector2d next_position;
+        Eigen::Vector2d heading;
+        Eigen::Vector2d right_heading;
 };
