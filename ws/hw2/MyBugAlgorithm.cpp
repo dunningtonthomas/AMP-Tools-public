@@ -29,12 +29,12 @@ amp::Path2D MyBugAlgorithm::plan(const amp::Problem2D& problem) {
         if(inCollision(problem, heading, collision_vertex, collision_obstacle)) {
             // Execute Bug 1 obstacle traversal
             //std::cout << "Collision detected" << std::endl;
-            //Bug1Traversal(path, problem);
-            //break;
+            Bug1Traversal(path, problem);
+            break;
             
             //Bug1Traversal(path, problem);
-            current_position += heading;
-            path.waypoints.push_back(current_position);
+            //current_position += heading;
+            //path.waypoints.push_back(current_position);
 
             // Move toward the goal ANYWAY FOR NOW
             // NOte: Remove this later
@@ -42,7 +42,7 @@ amp::Path2D MyBugAlgorithm::plan(const amp::Problem2D& problem) {
             //path.waypoints.push_back(current_position);
 
             // Add point above collision point
-            path.waypoints.push_back(current_position + Eigen::Vector2d(0, 0.5));
+            //path.waypoints.push_back(current_position + Eigen::Vector2d(0, 0.5));
         } else {
             // No collision, move toward the goal
             current_position += heading;
@@ -121,6 +121,7 @@ void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& prob
         if((path.waypoints.back() - hit_point).norm() < step_size || iter > max_iterations) {
             vertex_add_index = 1;
             break;
+            std::cout << "Exited Bug1 at " << iter << " iterations" << std::endl;
         }
     }
 }
