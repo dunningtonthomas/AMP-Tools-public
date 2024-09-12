@@ -86,20 +86,23 @@ void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& prob
     int vertex_add_index = 1;
 
     // Navigate around the obstacle
-    int max_iterations = 10000;
+    int max_iterations = 1000;
     int iter = 0;
+    std::cout << "Entering Bug1 loop" << std::endl;
     while(true) {
         iter++;
+        //std::cout << "Iter: " << iter << std::endl;
         // Update heading
         heading = edge * step_size;
-        right_heading = Eigen::Vector2d(heading.y(), -heading.x());
+        right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * 1 * step_size;
 
         // Check if we are colliding with another obstacle
         if(inCollision(problem, heading, collision_index, collision_obstacle)) {
             // New collision, update the heading
-            Eigen::Vector2d p1 = obstacle_vertices[collision_index];
-            Eigen::Vector2d p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
-            Eigen::Vector2d edge = (p2 - p1).normalized();
+            obstacle_vertices = collision_obstacle.verticesCW();
+            p1 = obstacle_vertices[collision_index];
+            p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
+            edge = (p2 - p1).normalized();
             vertex_add_index = 1;   // Reset the addition to the vertex index
             continue;   // Traverse around new obstacle
         } else {
@@ -108,20 +111,26 @@ void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& prob
             path.waypoints.push_back(current_position);
         }
 
+        // Move forward
+        // current_position += heading;
+        // path.waypoints.push_back(current_position);
+
         // Check if the right_heading no longer intersects with the obstacle
         if(!inCollision(problem, right_heading, collision_index_right, collision_obstacle_right)) {
             // No longer intersecting, rotate to align with the next vertex
-            Eigen::Vector2d p1 = obstacle_vertices[(collision_index + vertex_add_index) % obstacle_vertices.size()];
-            Eigen::Vector2d p2 = obstacle_vertices[(collision_index + vertex_add_index + 1) % obstacle_vertices.size()];   
-            Eigen::Vector2d edge = (p2 - p1).normalized();
+            std::cout << "Right heading no longer intersects" << std::endl;
+            p1 = obstacle_vertices[(collision_index + vertex_add_index) % obstacle_vertices.size()];
+            p2 = obstacle_vertices[(collision_index + vertex_add_index + 1) % obstacle_vertices.size()];   
+            edge = (p2 - p1).normalized();
             vertex_add_index++;
         }
 
+
         // Check if we are back at the first hit point
-        if((path.waypoints.back() - hit_point).norm() < step_size || iter > max_iterations) {
+        if((path.waypoints.back() - hit_point).norm() < 0.9*step_size || iter > max_iterations) {
             vertex_add_index = 1;
-            break;
             std::cout << "Exited Bug1 at " << iter << " iterations" << std::endl;
+            break;
         }
     }
 }
