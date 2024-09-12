@@ -29,7 +29,8 @@ amp::Path2D MyBugAlgorithm::plan(const amp::Problem2D& problem) {
         if(inCollision(problem, heading, collision_vertex, collision_obstacle)) {
             // Execute Bug 1 obstacle traversal
             //std::cout << "Collision detected" << std::endl;
-            Bug1Traversal(path, problem);
+            //Bug1Traversal(path, problem);
+            //break;
             
             //Bug1Traversal(path, problem);
             current_position += heading;
@@ -41,7 +42,7 @@ amp::Path2D MyBugAlgorithm::plan(const amp::Problem2D& problem) {
             //path.waypoints.push_back(current_position);
 
             // Add point above collision point
-            //path.waypoints.push_back(current_position + Eigen::Vector2d(0, 0.5));
+            path.waypoints.push_back(current_position + Eigen::Vector2d(0, 0.5));
         } else {
             // No collision, move toward the goal
             current_position += heading;
@@ -81,8 +82,14 @@ void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& prob
     heading = edge * step_size;
     right_heading = Eigen::Vector2d(heading.y(), -heading.x());
 
+    // Addition to get the next vertex of the obstacle
+    int vertex_add_index = 1;
+
     // Navigate around the obstacle
+    int max_iterations = 10000;
+    int iter = 0;
     while(true) {
+        iter++;
         // Update heading
         heading = edge * step_size;
         right_heading = Eigen::Vector2d(heading.y(), -heading.x());
@@ -93,6 +100,7 @@ void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& prob
             Eigen::Vector2d p1 = obstacle_vertices[collision_index];
             Eigen::Vector2d p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
             Eigen::Vector2d edge = (p2 - p1).normalized();
+            vertex_add_index = 1;   // Reset the addition to the vertex index
             continue;   // Traverse around new obstacle
         } else {
             // No collision, move forward
@@ -102,12 +110,16 @@ void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& prob
 
         // Check if the right_heading no longer intersects with the obstacle
         if(!inCollision(problem, right_heading, collision_index_right, collision_obstacle_right)) {
-            // No longer intersecting, rotate right
+            // No longer intersecting, rotate to align with the next vertex
+            Eigen::Vector2d p1 = obstacle_vertices[(collision_index + vertex_add_index) % obstacle_vertices.size()];
+            Eigen::Vector2d p2 = obstacle_vertices[(collision_index + vertex_add_index + 1) % obstacle_vertices.size()];   
+            Eigen::Vector2d edge = (p2 - p1).normalized();
+            vertex_add_index++;
         }
-        
 
         // Check if we are back at the first hit point
-        if((path.waypoints.back() - hit_point).norm() < step_size) {
+        if((path.waypoints.back() - hit_point).norm() < step_size || iter > max_iterations) {
+            vertex_add_index = 1;
             break;
         }
     }
@@ -151,6 +163,48 @@ bool MyBugAlgorithm::inCollision(const amp::Problem2D& problem, Eigen::Vector2d 
 }
 
 
+
+// CHAD:
+// Helper function to check the orientation of the triplet (p, q, r)
+int MyBugAlgorithm::orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r) {
+    // Calculate the determinant of the matrix formed by the vectors pq and qr
+    double val = (q.y() - p.y()) * (r.x() - q.x()) - (q.x() - p.x()) * (r.y() - q.y());
+    
+    if (val == 0) return 0; // collinear
+    return (val > 0) ? 1 : 2; // clock or counterclock wise
+}
+
+// Check if point q lies on segment pr
+bool MyBugAlgorithm::onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r) {
+    return q.x() <= std::max(p.x(), r.x()) && q.x() >= std::min(p.x(), r.x()) &&
+           q.y() <= std::max(p.y(), r.y()) && q.y() >= std::min(p.y(), r.y());
+}
+
+// Main function to check if line segments (p1, q1) and (p2, q2) intersect
+bool MyBugAlgorithm::intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2) {
+    // Find the four orientations needed for the general and special cases
+    int o1 = orientation(p1, q1, p2);
+    int o2 = orientation(p1, q1, q2);
+    int o3 = orientation(p2, q2, p1);
+    int o4 = orientation(p2, q2, q1);
+    
+    // General case: different orientations indicate intersection
+    if (o1 != o2 && o3 != o4)
+        return true;
+    
+    // Special Cases: when points are collinear and lie on the segment
+    if (o1 == 0 && onSegment(p1, p2, q1)) return true;
+    if (o2 == 0 && onSegment(p1, q2, q1)) return true;
+    if (o3 == 0 && onSegment(p2, p1, q2)) return true;
+    if (o4 == 0 && onSegment(p2, q1, q2)) return true;
+    
+    return false; // No intersection
+}
+
+
+
+//ORIGINAL:
+/*
 // Given three collinear points p, q, r, the function checks if 
 // point q lies on line segment 'pr' 
 bool MyBugAlgorithm::onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r) 
@@ -211,4 +265,4 @@ bool MyBugAlgorithm::intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Ve
   
     return false; // Doesn't fall in any of the above cases 
 } 
-
+*/
