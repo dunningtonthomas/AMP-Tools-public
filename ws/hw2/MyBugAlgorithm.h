@@ -10,7 +10,7 @@ class MyBugAlgorithm : public amp::BugAlgorithm {
         virtual amp::Path2D plan(const amp::Problem2D& problem) override;
 
         // Collision Checker
-        bool inCollision(const amp::Problem2D& problem, Eigen::Vector2d dir, std::vector<Eigen::Vector2d>& collision_vertices, amp::Obstacle2D& collision_obstacle);
+        bool inCollision(const amp::Problem2D& problem, Eigen::Vector2d dir, int& collision_index, amp::Obstacle2D& collision_obstacle);
         bool intersect(Eigen::Vector2d p1, Eigen::Vector2d p2, Eigen::Vector2d p3, Eigen::Vector2d p4);
         bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 
         int orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 
