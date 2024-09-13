@@ -15,13 +15,15 @@ class MyBugAlgorithm : public amp::BugAlgorithm {
         bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 
         int orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 
 
+        // Distance Checker
+        double distance(Eigen::Vector2d p1, Eigen::Vector2d p2);
+
         // Rotate Headings
         void rotateHeading(double angle);
 
         // Bug 1 Traversal
         void Bug1Traversal(amp::Path2D& path, const amp::Problem2D& problem);
-
-        
+        void Bug2Traversal(amp::Path2D& path, const amp::Problem2D& problem);
 
     private:
 

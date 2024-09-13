@@ -16,10 +16,10 @@ int main(int argc, char** argv) {
     /*    Randomly generate the problem     */ 
 
     // Use WO1 from Exercise 2
-    //Problem2D problem = HW2::getWorkspace1();
+    Problem2D problem = HW2::getWorkspace1();
 
     // Use WO1 from Exercise 2
-    Problem2D problem = HW2::getWorkspace2();
+    //Problem2D problem = HW2::getWorkspace2();
 
 
     // Make a random environment spec, edit properties about it such as the number of obstacles
@@ -50,7 +50,6 @@ int main(int argc, char** argv) {
         Visualizer::makeFigure(problem, path);
     }
 
-
     // Let's get crazy and generate a random environment and test your algorithm
     {
         amp::Path2D path; // Make empty path, problem, and collision points, as they will be created by generateAndCheck()
@@ -74,7 +73,7 @@ int main(int argc, char** argv) {
     
     // This will reconstruct using the default constructor every trial
     //HW2::grade<MyBugAlgorithm>("nonhuman.biologic@myspace.edu", argc, argv);
-    //HW2::grade<MyBugAlgorithm>("thomas.dunnington@colorado.edu", argc, argv);
+    HW2::grade<MyBugAlgorithm>("thomas.dunnington@colorado.edu", argc, argv);
 
     return 0;
 }
