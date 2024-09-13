@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     
     // This will reconstruct using the default constructor every trial
     //HW2::grade<MyBugAlgorithm>("nonhuman.biologic@myspace.edu", argc, argv);
-    //HW2::grade<MyBugAlgorithm>("thomas.dunnington@colorado.edu", argc, argv);
+    HW2::grade<MyBugAlgorithm>("thomas.dunnington@colorado.edu", argc, argv);
 
     return 0;
 }

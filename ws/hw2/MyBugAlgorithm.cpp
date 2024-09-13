@@ -52,7 +52,7 @@ amp::Path2D MyBugAlgorithm::plan(const amp::Problem2D& problem) {
 
 
 
-void MyBugAlgorithm::Bug1Traversal_Distance(amp::Path2D& path, const amp::Problem2D& problem) {
+void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& problem) {
     // Bug 1 Obstacle Traversal, move around the obstacle and go to the closest point to the goal
     amp::Obstacle2D collision_obstacle;
     int collision_index;
@@ -166,146 +166,24 @@ void MyBugAlgorithm::Bug1Traversal_Distance(amp::Path2D& path, const amp::Proble
         // Check if we are back at the first hit point
         if(((path.waypoints.back() - hit_point).norm() < 2*step_size && iter > 2) || iter > max_iterations) {
             vertex_add_index = 1;
-            std::cout << "Exited Bug1 DISTANCE at " << iter << " iterations" << std::endl;
-            break;
-        }
-    }
-    // Go to the closest point to the goal, follow the path vector
-    for(int i = 0; i < minimum_distance_index; i++) {
-        current_position = path_vector[i];
-        path.waypoints.push_back(current_position);
-    }
-}
-
-
-
-void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& problem) {
-    // Bug 1 Obstacle Traversal, move around the obstacle and go to the closest point to the goal
-    amp::Obstacle2D collision_obstacle;
-    int collision_index;
-    inCollision(problem, heading, collision_index, collision_obstacle);
-    std::vector<Eigen::Vector2d> obstacle_vertices = collision_obstacle.verticesCW();
-
-    // Right heading collision objects
-    int collision_index_right;
-    amp::Obstacle2D collision_obstacle_right;
-
-    // Set initial hit point
-    Eigen::Vector2d hit_point = current_position;
-
-    // Create vector of the edge of the obstacle using the collision vertices
-    Eigen::Vector2d p1 = obstacle_vertices[collision_index];
-    Eigen::Vector2d p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
-    Eigen::Vector2d edge = (p2 - p1).normalized();
-
-    // Set heading to be collinear with the edge
-    heading = edge * step_size;
-    right_heading = Eigen::Vector2d(heading.y(), -heading.x());
-    double heading_extension = 2;
-
-    // Addition to get the next vertex of the obstacle
-    int vertex_add_index = 1;
-
-    // Distance
-    double minimum_distance = (problem.q_goal - current_position).norm();
-    double distance = minimum_distance;
-    Eigen::Vector2d closest_point = current_position;
-
-    // Vector to store the entire path, used to get back to the closest position
-    std::vector<Eigen::Vector2d> path_vector;
-    int minimum_distance_index = 0;
-
-    // Navigate around the obstacle
-    int max_iterations = 10000;
-    int iter = 0;
-    //std::cout << "Entering Bug1 loop" << std::endl;
-    while(true) {
-        iter++;
-        //std::cout << "Iter: " << iter << std::endl;
-
-        // Check if we are colliding with another obstacle
-        if(inCollision(problem, heading_extension*heading, collision_index, collision_obstacle)) {
-            // New collision, update the heading
-            obstacle_vertices = collision_obstacle.verticesCW();
-            p1 = obstacle_vertices[collision_index];
-            p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
-            edge = (p2 - p1).normalized();
-            vertex_add_index = 1;   // Reset the addition to the vertex index
-        } 
-
-        // Update heading
-        heading = edge * step_size;
-        right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
-        
-        // Move forward
-        current_position += heading;
-        path.waypoints.push_back(current_position);
-        path_vector.push_back(current_position);
-
-        // Update the minimum distance
-        distance = (problem.q_goal - current_position).norm();
-        if(distance < minimum_distance) {
-            minimum_distance = distance;
-            closest_point = current_position;
-            minimum_distance_index = path_vector.size() - 1;
-        }
-
-        // Check if the right_heading no longer intersects with the obstacle
-        if(!intersect(current_position, current_position + heading_extension * right_heading, p1, p2)) {
-            // Move forward
-            // current_position += heading;
-            // path.waypoints.push_back(current_position);
-            // path_vector.push_back(current_position);
-
-            // No longer intersecting, rotate to align with the next vertex
-            //std::cout << "Right heading no longer intersects" << std::endl;
-            p1 = obstacle_vertices[(collision_index + vertex_add_index) % obstacle_vertices.size()];
-            p2 = obstacle_vertices[(collision_index + vertex_add_index + 1) % obstacle_vertices.size()];   
-            edge = (p2 - p1).normalized();
-            vertex_add_index++;
-
-            // Update heading
-            heading = edge * step_size;
-            right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
-
-            // Check if we are colliding with another obstacle
-            if(inCollision(problem, heading_extension*heading, collision_index, collision_obstacle)) {
-                // New collision, update the heading
-                obstacle_vertices = collision_obstacle.verticesCW();
-                p1 = obstacle_vertices[collision_index];
-                p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
-                edge = (p2 - p1).normalized();
-                vertex_add_index = 1;   // Reset the addition to the vertex index
-            }
-            // Update heading
-            heading = edge * step_size;
-            right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
-            
-            // Move forward
-            current_position += heading;
-            path.waypoints.push_back(current_position);
-            path_vector.push_back(current_position);
-
-            // Update the minimum distance
-            distance = (problem.q_goal - current_position).norm();
-            if(distance < minimum_distance) {
-                minimum_distance = distance;
-                closest_point = current_position;
-                minimum_distance_index = path_vector.size() - 1;
-            }
-        }
-
-        // Check if we are back at the first hit point
-        if(((path.waypoints.back() - hit_point).norm() < 2*step_size && iter > 2) || iter > max_iterations) {
-            vertex_add_index = 1;
             std::cout << "Exited Bug1 at " << iter << " iterations" << std::endl;
             break;
         }
     }
-    // Go to the closest point to the goal, follow the path vector
-    for(int i = 0; i < minimum_distance_index; i++) {
-        current_position = path_vector[i];
-        path.waypoints.push_back(current_position);
+
+    // Go to the closest point to the goal, follow the path vector left or right depending on which is closer
+    if(minimum_distance_index < path_vector.size() / 2.0) {
+        // Go to the left
+        for(int i = 0; i <= minimum_distance_index; i++) {
+            current_position = path_vector[i];
+            path.waypoints.push_back(current_position);
+        }
+    } else {
+        // Go to the right
+        for(int i = path_vector.size() - 1; i >= minimum_distance_index; i--) {
+            current_position = path_vector[i];
+            path.waypoints.push_back(current_position);
+        }
     }
 }
 
@@ -397,6 +275,19 @@ void MyBugAlgorithm::Bug2Traversal(amp::Path2D& path, const amp::Problem2D& prob
             // Update heading
             heading = edge * step_size;
             right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
+        }
+
+        // Check if we have intersected with the m-line
+        if(intersect(current_position, current_position + heading_extension*heading, problem.q_init, problem.q_goal)) {
+            // We have intersected with the m-line, move to the closest point to the goal
+            //std::cout << "Intersected with m-line" << std::endl;
+            if((problem.q_goal - current_position).norm() < initial_distance) {
+                // Reached close point along the m-line, take one more step, break and return
+                current_position += heading;
+                path.waypoints.push_back(current_position);
+                std::cout << "Exited Bug2 at " << iter << " iterations" << std::endl;
+                break;
+            }
         }
 
         // Check if we got back to the initial hit point

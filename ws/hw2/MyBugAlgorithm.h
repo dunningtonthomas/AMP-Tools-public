@@ -23,7 +23,6 @@ class MyBugAlgorithm : public amp::BugAlgorithm {
 
         // Bug 1 Traversal
         void Bug1Traversal(amp::Path2D& path, const amp::Problem2D& problem);
-        void Bug1Traversal_Distance(amp::Path2D& path, const amp::Problem2D& problem);
         void Bug2Traversal(amp::Path2D& path, const amp::Problem2D& problem);
 
     private:
