@@ -33,23 +33,8 @@ amp::Path2D MyBugAlgorithm::plan(const amp::Problem2D& problem) {
 
         // Check if we are colliding with an obstacle
         if(inCollision(problem, heading, collision_vertex, collision_obstacle)) {
-            // Execute Bug 1 obstacle traversal
-            //std::cout << "Collision detected" << std::endl;
-
+            //Bug1Traversal_Distance(path, problem);
             Bug2Traversal(path, problem);
-            //break;
-            
-            //Bug1Traversal(path, problem);
-            //current_position += heading;
-            //path.waypoints.push_back(current_position);
-
-            // Move toward the goal ANYWAY FOR NOW
-            // NOte: Remove this later
-            //current_position += heading;
-            //path.waypoints.push_back(current_position);
-
-            // Add point above collision point
-            //path.waypoints.push_back(current_position + Eigen::Vector2d(0, 0.5));
         } else {
             // No collision, move toward the goal
             current_position += heading;
@@ -64,6 +49,134 @@ amp::Path2D MyBugAlgorithm::plan(const amp::Problem2D& problem) {
     }
     return path;
 }
+
+
+
+void MyBugAlgorithm::Bug1Traversal_Distance(amp::Path2D& path, const amp::Problem2D& problem) {
+    // Bug 1 Obstacle Traversal, move around the obstacle and go to the closest point to the goal
+    amp::Obstacle2D collision_obstacle;
+    int collision_index;
+    inCollision(problem, heading, collision_index, collision_obstacle);
+    std::vector<Eigen::Vector2d> obstacle_vertices = collision_obstacle.verticesCW();
+
+    // Right heading collision objects
+    int collision_index_right;
+    amp::Obstacle2D collision_obstacle_right;
+
+    // Set initial hit point
+    Eigen::Vector2d hit_point = current_position;
+
+    // Create vector of the edge of the obstacle using the collision vertices
+    Eigen::Vector2d p1 = obstacle_vertices[collision_index];
+    Eigen::Vector2d p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
+    Eigen::Vector2d edge = (p2 - p1).normalized();
+
+    // Set heading to be collinear with the edge
+    heading = edge * step_size;
+    right_heading = Eigen::Vector2d(heading.y(), -heading.x());
+    double heading_extension = 2;
+
+    // Addition to get the next vertex of the obstacle
+    int vertex_add_index = 1;
+
+    // Distance
+    double minimum_distance = (problem.q_goal - current_position).norm();
+    double distance = minimum_distance;
+    Eigen::Vector2d closest_point = current_position;
+
+    // Vector to store the entire path, used to get back to the closest position
+    std::vector<Eigen::Vector2d> path_vector;
+    int minimum_distance_index = 0;
+
+    // Navigate around the obstacle
+    int max_iterations = 10000;
+    int iter = 0;
+    //std::cout << "Entering Bug1 loop" << std::endl;
+    while(true) {
+        iter++;
+        //std::cout << "Iter: " << iter << std::endl;
+
+        // Check if we are colliding with another obstacle
+        if(inCollision(problem, heading_extension*heading, collision_index, collision_obstacle)) {
+            // New collision, update the heading
+            obstacle_vertices = collision_obstacle.verticesCW();
+            p1 = obstacle_vertices[collision_index];
+            p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
+            edge = (p2 - p1).normalized();
+            vertex_add_index = 1;   // Reset the addition to the vertex index
+        } 
+
+        // Update heading
+        heading = edge * step_size;
+        right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
+        
+        // Move forward
+        current_position += heading;
+        path.waypoints.push_back(current_position);
+        path_vector.push_back(current_position);
+
+        // Update the minimum distance
+        distance = (problem.q_goal - current_position).norm();
+        if(distance < minimum_distance) {
+            minimum_distance = distance;
+            closest_point = current_position;
+            minimum_distance_index = path_vector.size() - 1;
+        }
+
+        // Check if the distance from the original collision vertex is greater than the edge length
+        if(distance_func(p1, current_position) > sqrt(pow((p2 - p1).norm(),2) + pow(heading_extension*step_size,2))) {
+            // No longer intersecting, rotate to align with the next vertex
+            //std::cout << "Right heading no longer intersects" << std::endl;
+            p1 = obstacle_vertices[(collision_index + vertex_add_index) % obstacle_vertices.size()];
+            p2 = obstacle_vertices[(collision_index + vertex_add_index + 1) % obstacle_vertices.size()];   
+            edge = (p2 - p1).normalized();
+            vertex_add_index++;
+
+            // Update heading
+            heading = edge * step_size;
+            right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
+
+            // Check if we are colliding with another obstacle
+            if(inCollision(problem, heading_extension*heading, collision_index, collision_obstacle)) {
+                // New collision, update the heading
+                obstacle_vertices = collision_obstacle.verticesCW();
+                p1 = obstacle_vertices[collision_index];
+                p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
+                edge = (p2 - p1).normalized();
+                vertex_add_index = 1;   // Reset the addition to the vertex index
+            }
+            // Update heading
+            heading = edge * step_size;
+            right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
+            
+            // Move forward
+            current_position += heading;
+            path.waypoints.push_back(current_position);
+            path_vector.push_back(current_position);
+
+            // Update the minimum distance
+            distance = (problem.q_goal - current_position).norm();
+            if(distance < minimum_distance) {
+                minimum_distance = distance;
+                closest_point = current_position;
+                minimum_distance_index = path_vector.size() - 1;
+            }
+        }
+
+        // Check if we are back at the first hit point
+        if(((path.waypoints.back() - hit_point).norm() < 2*step_size && iter > 2) || iter > max_iterations) {
+            vertex_add_index = 1;
+            std::cout << "Exited Bug1 DISTANCE at " << iter << " iterations" << std::endl;
+            break;
+        }
+    }
+    // Go to the closest point to the goal, follow the path vector
+    for(int i = 0; i < minimum_distance_index; i++) {
+        current_position = path_vector[i];
+        path.waypoints.push_back(current_position);
+    }
+}
+
 
 
 void MyBugAlgorithm::Bug1Traversal(amp::Path2D& path, const amp::Problem2D& problem) {
@@ -205,10 +318,6 @@ void MyBugAlgorithm::Bug2Traversal(amp::Path2D& path, const amp::Problem2D& prob
     inCollision(problem, heading, collision_index, collision_obstacle);
     std::vector<Eigen::Vector2d> obstacle_vertices = collision_obstacle.verticesCW();
 
-    // Right heading collision objects
-    int collision_index_right;
-    amp::Obstacle2D collision_obstacle_right;
-
     // Set initial hit point
     Eigen::Vector2d hit_point = current_position;
 
@@ -231,11 +340,8 @@ void MyBugAlgorithm::Bug2Traversal(amp::Path2D& path, const amp::Problem2D& prob
     // Navigate around the obstacle
     int max_iterations = 10000;
     int iter = 0;
-    //std::cout << "Entering Bug1 loop" << std::endl;
     while(true) {
         iter++;
-        //std::cout << "Iter: " << iter << std::endl;
-
         // Check if we are colliding with another obstacle
         if(inCollision(problem, heading_extension*heading, collision_index, collision_obstacle)) {
             // New collision, update the heading
@@ -244,7 +350,7 @@ void MyBugAlgorithm::Bug2Traversal(amp::Path2D& path, const amp::Problem2D& prob
             p2 = obstacle_vertices[(collision_index+1) % obstacle_vertices.size()];   
             edge = (p2 - p1).normalized();
             vertex_add_index = 1;   // Reset the addition to the vertex index
-        } 
+        }
 
         // Update heading
         heading = edge * step_size;
@@ -254,10 +360,22 @@ void MyBugAlgorithm::Bug2Traversal(amp::Path2D& path, const amp::Problem2D& prob
         current_position += heading;
         path.waypoints.push_back(current_position);
 
-        // Check if the right_heading no longer intersects with the obstacle
-        if(!intersect(current_position, current_position + heading_extension * right_heading, p1, p2)) {
-            // No longer intersecting, rotate to align with the next vertex
-            //std::cout << "Right heading no longer intersects" << std::endl;
+        // Check if we have intersected with the m-line
+        if(intersect(current_position, current_position + heading_extension*heading, problem.q_init, problem.q_goal)) {
+            // We have intersected with the m-line, move to the closest point to the goal
+            //std::cout << "Intersected with m-line" << std::endl;
+            if((problem.q_goal - current_position).norm() < initial_distance) {
+                // Reached close point along the m-line, take one more step, break and return
+                current_position += heading;
+                path.waypoints.push_back(current_position);
+                std::cout << "Exited Bug2 at " << iter << " iterations" << std::endl;
+                break;
+            }
+        }
+
+        // Check if the distance is large enough to switch to the next vertex
+        if(distance_func(p1, current_position) > sqrt(pow((p2 - p1).norm(),2) + pow(heading_extension*step_size,2))) {
+            // Switch to the next vertex of the obstacle
             p1 = obstacle_vertices[(collision_index + vertex_add_index) % obstacle_vertices.size()];
             p2 = obstacle_vertices[(collision_index + vertex_add_index + 1) % obstacle_vertices.size()];   
             edge = (p2 - p1).normalized();
@@ -279,48 +397,27 @@ void MyBugAlgorithm::Bug2Traversal(amp::Path2D& path, const amp::Problem2D& prob
             // Update heading
             heading = edge * step_size;
             right_heading = Eigen::Vector2d(heading.y(), -heading.x()).normalized() * step_size;
-            
-            // Move forward
-            current_position += heading;
-            path.waypoints.push_back(current_position);
         }
 
-        // Check if we have intersected with the m-line
-        if(intersect(current_position, current_position + heading_extension*heading, problem.q_init, problem.q_goal)) {
-            // We have intersected with the m-line, move to the closest point to the goal
-            //std::cout << "Intersected with m-line" << std::endl;
-            if((problem.q_goal - current_position).norm() < initial_distance) {
-                // Reached close point along the m-line, take one more step, break and return
-                current_position += heading;
-                path.waypoints.push_back(current_position);
-                break;
-            }
+        // Check if we got back to the initial hit point
+        if(((path.waypoints.back() - hit_point).norm() < 2*step_size && iter > 2) || iter > max_iterations) {
+            vertex_add_index = 1;
+            std::cout << "Exited Bug2 at " << iter << " iterations" << std::endl;
+            break;
         }
 
         // Exit if reach the max iterations
         if(iter > max_iterations) {
+            std::cout << "Exited Bug2 at " << iter << " iterations" << std::endl;
             break;
         }
     }
 }
 
 
-
 // Calculates the distance between two points
-double MyBugAlgorithm::distance(Eigen::Vector2d p1, Eigen::Vector2d p2) {
+double MyBugAlgorithm::distance_func(Eigen::Vector2d p1, Eigen::Vector2d p2) {
     return sqrt(pow(p1.x() - p2.x(), 2) + pow(p1.y() - p2.y(), 2));
-}
-
-
-// Write a function that calculates the angle between the heading and the the edge of the obstacle
-void MyBugAlgorithm::rotateHeading(double anlge) {
-    // Rotate the heading by the angle
-    double x = heading.x() * cos(anlge) - heading.y() * sin(anlge);
-    double y = heading.x() * sin(anlge) + heading.y() * cos(anlge);
-    heading = Eigen::Vector2d(x, y);
-
-    // Set the right_heading
-    right_heading = Eigen::Vector2d(heading.y(), -heading.x());
 }
 
 
@@ -350,8 +447,7 @@ bool MyBugAlgorithm::inCollision(const amp::Problem2D& problem, Eigen::Vector2d 
 }
 
 
-
-// CHAD:
+// Got the following functions from GeekforGeeks:
 // Helper function to check the orientation of the triplet (p, q, r)
 int MyBugAlgorithm::orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r) {
     // Calculate the determinant of the matrix formed by the vectors pq and qr
@@ -388,7 +484,3 @@ bool MyBugAlgorithm::intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Ve
     return false; // No intersection
 }
 
-
-// THOUGHTS:
-// Slowly rotate the heading when the right heading is out 
-// Once this causes a collision, use the new edge as the collision edge rather than incrementing the vertex index
