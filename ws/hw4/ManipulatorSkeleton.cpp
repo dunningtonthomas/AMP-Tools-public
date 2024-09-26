@@ -8,7 +8,28 @@ MyManipulator2D::MyManipulator2D()
 // Override this method for implementing forward kinematics
 Eigen::Vector2d MyManipulator2D::getJointLocation(const amp::ManipulatorState& state, uint32_t joint_index) const {
     // Implement forward kinematics to calculate the joint position given the manipulator state (angles)
-    std::vector<Eigen::Vector2d> joint_positions = {Eigen::Vector2d(0.0, 0.0), Eigen::Vector2d(0.0, 1.0), Eigen::Vector2d(1.0, 1.0)};
+    // m_link_lengths contains the lengths of each link getLinkLengths()
+    std::vector<Eigen::Vector2d> joint_positions;
+    std::vector<Eigen::Matrix3d> rot_mats;
+    std::vector<double> links = getLinkLengths();
+
+    // Add the base location
+    joint_positions.push_back(Eigen::Vector2d(0.0, 0.0));
+
+    double rotation_angle = 0.0;
+    Eigen::Vector2d joint_position(0.0, 0.0);
+    for(int i = 0; i < state.size(); i++) {
+        // Increment the rotation angle
+        rotation_angle = rotation_angle + state[i];
+
+        // Update the joint position
+        joint_position = joint_position + Eigen::Vector2d(links[i] * cos(rotation_angle), links[i] * sin(rotation_angle));
+        
+        // Push onto joint position vector
+        joint_positions.push_back(joint_position);
+    }
+
+    //std::vector<Eigen::Vector2d> joint_positions = {Eigen::Vector2d(0.0, 0.0), Eigen::Vector2d(0.0, 1.0), Eigen::Vector2d(1.0, 1.0)};
     return joint_positions[joint_index];
 }
 
