@@ -83,26 +83,34 @@ int main(int argc, char** argv) {
 
     // Create a manipulator with 3 links
     std::vector<double> link_lengths_a = {0.5, 1.0, 0.5};
-    std::vector<double> link_lengths_b = {1.0, 0.5, 1.0};
-
     MyManipulator2D manipulator(link_lengths_a);
 
     // You can visualize your manipulator given an angle state like so:
     amp::ManipulatorState test_state(3);
     test_state << M_PI/6, M_PI/3, 7*M_PI/4;
-    //test_state.setZero();
 
     // Get the location of the end effector
     Eigen::Vector2d end_effector = manipulator.getJointLocation(test_state, 3);
     std::cout << "End effector location: " << end_effector.transpose() << std::endl;
 
+    // Inverse Kinematics
+    std::vector<double> link_lengths_b = {1.0, 0.5, 1.0};
+    MyManipulator2D manipulator_inverse(link_lengths_b);
+    Eigen::Vector2d end_effector_location(2.0, 0.0);
+    amp::ManipulatorState joint_angles = manipulator_inverse.getConfigurationFromIK(end_effector_location);
+
+    // Two link case
+    std::vector<double> link_lengths_c = {1.0, 1.0};
+    MyManipulator2D manipulator_two(link_lengths_c);
+    Eigen::Vector2d end_effector_location_two(0.7, 0.9);
+    amp::ManipulatorState joint_angles_two = manipulator_two.getConfigurationFromIK(end_effector_location_two);
+
+
     // The visualizer uses your implementation of forward kinematics to show the joint positions so you can use that to test your FK algorithm
     Visualizer::makeFigure(manipulator, test_state); 
+    Visualizer::makeFigure(manipulator_inverse, joint_angles); 
+    Visualizer::makeFigure(manipulator_two, joint_angles_two); 
     Visualizer::showFigures();
-
-
-
-
 
 
     ////////////////////////////////////////////////////////////////////////////
