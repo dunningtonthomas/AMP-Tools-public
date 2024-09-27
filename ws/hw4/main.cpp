@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     // Inverse Kinematics
     std::vector<double> link_lengths_b = {1.0, 0.5, 1.0};
     MyManipulator2D manipulator_inverse(link_lengths_b);
-    Eigen::Vector2d end_effector_location(2.0, 0.0);
+    Eigen::Vector2d end_effector_location(1.1, -1.75);
     amp::ManipulatorState joint_angles = manipulator_inverse.getConfigurationFromIK(end_effector_location);
 
     // Output the joint angles
@@ -111,9 +111,9 @@ int main(int argc, char** argv) {
 
     // The visualizer uses your implementation of forward kinematics to show the joint positions so you can use that to test your FK algorithm
     // Visualizer::makeFigure(manipulator, test_state); 
-    // Visualizer::makeFigure(manipulator_inverse, joint_angles); 
+    //Visualizer::makeFigure(manipulator_inverse, joint_angles); 
     // Visualizer::makeFigure(manipulator_two, joint_angles_two); 
-    // Visualizer::showFigures();
+    //Visualizer::showFigures();
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
     //Visualizer::showFigures();
 
     // Grade method
-    //amp::HW4::grade<MyManipulator2D>(cspace_constructor, "nonhuman.biologic@myspace.edu", argc, argv);
+    amp::HW4::grade<MyManipulator2D>(cspace_constructor, "thomas.dunnington@colorado.edu", argc, argv);
 
     return 0;
 }
