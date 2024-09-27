@@ -82,7 +82,7 @@ namespace amp {
         Eigen::Rotation2Dd rot(angle);
 
         for (const Eigen::Vector2d& vertex : vertices) {
-            
+                
             rotated_vertices.push_back(rot * vertex);
         }
 
@@ -96,6 +96,42 @@ namespace amp {
             negative_vertices.push_back(-vertex);
         }
         return negative_vertices;
+    }
+
+    // Main function to check if line segments (p1, q1) and (p2, q2) intersect
+    bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2) {
+        // Find the four orientations needed for the general and special cases
+        int o1 = orientation(p1, q1, p2);
+        int o2 = orientation(p1, q1, q2);
+        int o3 = orientation(p2, q2, p1);
+        int o4 = orientation(p2, q2, q1);
+        
+        // General case: different orientations indicate intersection
+        if (o1 != o2 && o3 != o4)
+            return true;
+        
+        // Special Cases: when points are collinear and lie on the segment
+        if (o1 == 0 && onSegment(p1, p2, q1)) return true;
+        if (o2 == 0 && onSegment(p1, q2, q1)) return true;
+        if (o3 == 0 && onSegment(p2, p1, q2)) return true;
+        if (o4 == 0 && onSegment(p2, q1, q2)) return true;
+        
+        return false; // No intersection
+    }
+
+    // Check if point q lies on segment pr
+    bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r) {
+        return q.x() <= std::max(p.x(), r.x()) && q.x() >= std::min(p.x(), r.x()) &&
+            q.y() <= std::max(p.y(), r.y()) && q.y() >= std::min(p.y(), r.y());
+    }
+
+    // Helper function to check the orientation of the triplet (p, q, r)
+    int orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r) {
+        // Calculate the determinant of the matrix formed by the vectors pq and qr
+        double val = (q.y() - p.y()) * (r.x() - q.x()) - (q.x() - p.x()) * (r.y() - q.y());
+        
+        if (val == 0) return 0; // collinear
+        return (val > 0) ? 1 : 2; // clock or counterclock wise
     }
 
 } // namespace amp

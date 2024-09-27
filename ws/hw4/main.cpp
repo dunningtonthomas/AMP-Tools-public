@@ -99,6 +99,9 @@ int main(int argc, char** argv) {
     Eigen::Vector2d end_effector_location(2.0, 0.0);
     amp::ManipulatorState joint_angles = manipulator_inverse.getConfigurationFromIK(end_effector_location);
 
+    // Output the joint angles
+    std::cout << "Joint angles: " << joint_angles.transpose() << std::endl;
+
     // Two link case
     std::vector<double> link_lengths_c = {1.0, 1.0};
     MyManipulator2D manipulator_two(link_lengths_c);
@@ -107,29 +110,45 @@ int main(int argc, char** argv) {
 
 
     // The visualizer uses your implementation of forward kinematics to show the joint positions so you can use that to test your FK algorithm
-    Visualizer::makeFigure(manipulator, test_state); 
-    Visualizer::makeFigure(manipulator_inverse, joint_angles); 
-    Visualizer::makeFigure(manipulator_two, joint_angles_two); 
-    Visualizer::showFigures();
+    // Visualizer::makeFigure(manipulator, test_state); 
+    // Visualizer::makeFigure(manipulator_inverse, joint_angles); 
+    // Visualizer::makeFigure(manipulator_two, joint_angles_two); 
+    // Visualizer::showFigures();
 
 
     ////////////////////////////////////////////////////////////////////////////
     // Problem 3
     ////////////////////////////////////////////////////////////////////////////
 
+    // Create the manipulator
+    std::vector<double> link_lengths_c_space = {1.0, 1.0};
+    MyManipulator2D manipulator_c_space(link_lengths_c_space);
+
     // Create the collision space constructor
-    // std::size_t n_cells = 5;
-    // MyManipulatorCSConstructor cspace_constructor(n_cells);
+    std::size_t n_cells = 500;
+    MyManipulatorCSConstructor cspace_constructor(n_cells);
 
-    // // Create the collision space using a given manipulator and environment
-    // std::unique_ptr<amp::GridCSpace2D> cspace = cspace_constructor.construct(manipulator, HW4::getEx3Workspace1());
+    // Get the environments
+    Environment2D env1 = HW4::getEx3Workspace1();
+    Environment2D env2 = HW4::getEx3Workspace2();
+    Environment2D env3 = HW4::getEx3Workspace3();
 
-    // // You can visualize your cspace 
-    // Visualizer::makeFigure(*cspace);
+    // Create the collision space using a given manipulator and environment
+    std::unique_ptr<amp::GridCSpace2D> cspace1 = cspace_constructor.construct(manipulator_c_space, env1);
+    std::unique_ptr<amp::GridCSpace2D> cspace2 = cspace_constructor.construct(manipulator_c_space, env2);
+    std::unique_ptr<amp::GridCSpace2D> cspace3 = cspace_constructor.construct(manipulator_c_space, env3);
 
-    // Visualizer::showFigures();
-    // // Grade method
-    // amp::HW4::grade<MyManipulator2D>(cspace_constructor, "nonhuman.biologic@myspace.edu", argc, argv);
+    // You can visualize your cspace 
+    //Visualizer::makeFigure(*cspace1);
+    //Visualizer::makeFigure(*cspace2);
+    //Visualizer::makeFigure(*cspace3);
+    //Visualizer::makeFigure(env1);
+    //Visualizer::makeFigure(env2);
+    //Visualizer::makeFigure(env3);
+    //Visualizer::showFigures();
+
+    // Grade method
+    //amp::HW4::grade<MyManipulator2D>(cspace_constructor, "nonhuman.biologic@myspace.edu", argc, argv);
 
     return 0;
 }

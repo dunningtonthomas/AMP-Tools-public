@@ -28,6 +28,11 @@ namespace amp{
     // @brief Return the negative of the vertices of a polygon
     std::vector<Eigen::Vector2d> negativeVertices(std::vector<Eigen::Vector2d>& vertices);
 
+    // @brief Collision Checker for manipulator using line segment intersection
+    bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);
+    bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r);
+    int orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 
+
 } // namespace amp
 
 

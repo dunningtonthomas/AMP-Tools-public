@@ -6,6 +6,9 @@
 // Include the correct homework header
 #include "hw/HW4.h"
 
+// Include helper functions
+#include "helperFuncs.h"
+
 // Derive the amp::GridCSpace2D class and override the missing method
 class MyGridCSpace2D : public amp::GridCSpace2D {
     public:
@@ -26,6 +29,9 @@ class MyManipulatorCSConstructor : public amp::ManipulatorCSConstructor {
 
         // Override this method for computing all of the boolean collision values for each cell in the cspace
         virtual std::unique_ptr<amp::GridCSpace2D> construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env) override;
+
+        // @brief Collision Checker for manipulator using line segment intersection
+        bool inCollision_manipulator(const amp::Environment2D& env, const amp::LinkManipulator2D& manipulator, amp::ManipulatorState joint_angles);
 
     private:
         std::size_t m_cells_per_dim;
