@@ -29,6 +29,8 @@ namespace amp{
     std::vector<Eigen::Vector2d> negativeVertices(std::vector<Eigen::Vector2d>& vertices);
 
     // @brief Collision Checker for manipulator using line segment intersection
+    bool inCollision(const amp::Problem2D& problem, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos);
+    bool inCollision(const amp::Problem2D& problem, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos, int& collision_index, amp::Obstacle2D& collision_obstacle);
     bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);
     bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r);
     int orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 

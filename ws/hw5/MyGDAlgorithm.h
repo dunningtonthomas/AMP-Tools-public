@@ -6,6 +6,9 @@
 // Include the correct homework header
 #include "hw/HW5.h"
 
+// Include helper functions
+#include "helperFuncs.h"
+
 
 class MyGDAlgorithm : public amp::GDAlgorithm {
 	public:

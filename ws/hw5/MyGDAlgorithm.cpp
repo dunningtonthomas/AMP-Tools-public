@@ -6,24 +6,56 @@ amp::Path2D MyGDAlgorithm::plan(const amp::Problem2D& problem) {
     amp::Path2D path;
     path.waypoints.push_back(problem.q_init);
 
-    // Gradient Descend Algorithm
+    // Gradient Descent Algorithm
     Eigen::Vector2d q_current = problem.q_init;
     Eigen::Vector2d q_next;
     double step_size = 0.05;
-    double epsilon = 0.01;
-    int max_iterations = 5000;
+    double epsilon = 0.25;
+    int max_iterations = 20000;
     int iterations = 0;
+
+    // Obstacle and obstacle index
+    int collision_index;
+    amp::Obstacle2D collision_obstacle;
 
     // Create the potential function
     MyPotentialFunction potential_function(problem, d_star, zetta, Q_star, eta);
+
+    // TODO: Step out of local minima by taking random step in a random direction that is not a collision
+    // Can also try to implement a smart gradient descent that avoids obstacles by checking for collision
 
     // Loop until the goal is reached or the maximum number of iterations is reached
     while((q_current - problem.q_goal).norm() > epsilon && iterations < max_iterations) {
         // Calculate the gradient of the potential function at the current point
         Eigen::Vector2d gradient = potential_function.gradient(q_current);
 
-        // Update the next point using the gradient and step size
-        q_next = q_current - step_size * gradient;
+        // Check the magnitude of the gradient to see if we are in a local minimum
+        if (gradient.norm() < 0.0001) {
+            std::cout << "Iteration: " << iterations << std::endl;
+            // Take a random step
+            Eigen::Vector2d random_step = Eigen::Vector2d::Random();
+            q_next = q_current + 5*step_size * random_step;
+
+            //output the random step
+            //std::cout << "Random step: " << 10*step_size*random_step << std::endl;
+        } else if (gradient.norm() > 50) {
+            // If the gradient is too large, take a smaller step with magnitude of 0.1
+            q_next = q_current - 0.1 * gradient.normalized();
+        }
+        else {
+            // Update the next point using the gradient and step size
+            q_next = q_current - step_size * gradient; 
+        }
+
+        // Check if the next point is in collision
+        if(inCollision(problem, q_current, q_next, collision_index, collision_obstacle)) {
+            // If in collision take a step perpendicular to the intersected edge, COUNTER CLOCKWISE
+            Eigen::Vector2d p2 = collision_obstacle.verticesCCW()[collision_index];
+            Eigen::Vector2d q2 = collision_obstacle.verticesCCW()[(collision_index + 1) % collision_obstacle.verticesCCW().size()];
+            Eigen::Vector2d edge = q2 - p2;
+            Eigen::Vector2d normal = Eigen::Vector2d(-edge.y(), edge.x()).normalized();
+            q_next = q_current + step_size * normal;
+        }
 
         // Update the current point
         q_current = q_next;
@@ -53,9 +85,9 @@ double MyPotentialFunction::operator()(const Eigen::Vector2d& q) const {
 
     // Define Uatt
     if(distanceBetween(q, q_goal) <= d_star) {
-        Uatt = d_star * zetta * distanceBetween(q, q_goal) - 0.5 * zetta * d_star * d_star;
-    } else {
         Uatt = 0.5 * zetta*distanceBetween(q, q_goal) * distanceBetween(q, q_goal);
+    } else {
+        Uatt = d_star * zetta * distanceBetween(q, q_goal) - 0.5 * zetta * d_star * d_star;
     }
 
     // Define Urep
@@ -142,6 +174,23 @@ Eigen::Vector2d MyPotentialFunction::gradient(const Eigen::Vector2d& q) const {
         if(distance <= Q_star) {
             Eigen::Vector2d gradient_rep = (q - closest_point) / (distance);
             gradient += eta * -1 * gradient_rep / (distance * distance) * (1/distance - 1/Q_star);
+        }
+    }
+
+    // Calculate a tanget gradient component around the obstacles to cause circulation
+    double circulation_scale = 2.0;
+    for(auto& obstacle : problem.obstacles) {
+        Eigen::Vector2d closest_point;
+        double distance = distanceToObstacle(q, obstacle, closest_point);
+        if(distance <= Q_star) {
+            Eigen::Vector2d gradient_rep = (q - closest_point) / (distance);
+
+            // Rotate the gradient_rep vector by 90 degree
+            Eigen::Vector2d temp = gradient_rep;
+            gradient_rep(0) = temp(1);
+            gradient_rep(1) = -temp(0);
+
+            gradient += circulation_scale * eta * gradient_rep / (distance * distance) * (1/distance - 1/Q_star);
         }
     }
 
