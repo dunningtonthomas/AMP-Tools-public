@@ -14,17 +14,18 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     // Test your gradient descent algorithm on a random problem.
-    MyGDAlgorithm algo(1.0, 1.0, 1.0, 1.0);
+    double d_star = 4.0, zetta = 1.0, Q_star = 0.5, eta = 1.0;
+    MyGDAlgorithm algo(d_star, zetta, Q_star, eta);
     amp::Path2D path;
     amp::Problem2D prob;
     bool success = HW5::generateAndCheck(algo, path, prob);
     Visualizer::makeFigure(prob, path);
 
     // Visualize your potential function
-    amp::Visualizer::makeFigure(MyPotentialFunction{}, prob.x_min, prob.x_max, prob.y_min, prob.y_max, 20);
+    amp::Visualizer::makeFigure(MyPotentialFunction{prob, d_star, zetta, Q_star, eta}, prob.x_min, prob.x_max, prob.y_min, prob.y_max, 20);
     Visualizer::showFigures();
     
     // Arguments following argv correspond to the constructor arguments of MyGDAlgorithm:
-    HW5::grade<MyGDAlgorithm>("nonhuman.biologic@myspace.edu", argc, argv, 1.0, 1.0, 1.0, 1.0);
+    //HW5::grade<MyGDAlgorithm>("nonhuman.biologic@myspace.edu", argc, argv, 1.0, 1.0, 1.0, 1.0);
     return 0;
 }
