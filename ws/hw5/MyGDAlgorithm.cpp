@@ -2,11 +2,42 @@
 
 // Implement your plan method here, similar to HW2:
 amp::Path2D MyGDAlgorithm::plan(const amp::Problem2D& problem) {
+    // Create a path object to store the waypoints
     amp::Path2D path;
     path.waypoints.push_back(problem.q_init);
-    path.waypoints.push_back(Eigen::Vector2d(1.0, 5.0));
-    path.waypoints.push_back(Eigen::Vector2d(3.0, 9.0));
+
+    // Gradient Descend Algorithm
+    Eigen::Vector2d q_current = problem.q_init;
+    Eigen::Vector2d q_next;
+    double step_size = 0.05;
+    double epsilon = 0.01;
+    int max_iterations = 5000;
+    int iterations = 0;
+
+    // Create the potential function
+    MyPotentialFunction potential_function(problem, d_star, zetta, Q_star, eta);
+
+    // Loop until the goal is reached or the maximum number of iterations is reached
+    while((q_current - problem.q_goal).norm() > epsilon && iterations < max_iterations) {
+        // Calculate the gradient of the potential function at the current point
+        Eigen::Vector2d gradient = potential_function.gradient(q_current);
+
+        // Update the next point using the gradient and step size
+        q_next = q_current - step_size * gradient;
+
+        // Update the current point
+        q_current = q_next;
+
+        // Add the current point to the path
+        path.waypoints.push_back(q_current);
+
+        // Increment the iteration counter
+        iterations++;
+    }
+
+    // Add the goal point to the path
     path.waypoints.push_back(problem.q_goal);
+
     return path;
 }
 
@@ -18,6 +49,7 @@ double MyPotentialFunction::operator()(const Eigen::Vector2d& q) const {
     // d_star, zetta, Q_star, eta
     const Eigen::Vector2d q_goal = problem.q_goal;
     double Uatt = 0;
+    Eigen::Vector2d closest_point;
 
     // Define Uatt
     if(distanceBetween(q, q_goal) <= d_star) {
@@ -29,7 +61,7 @@ double MyPotentialFunction::operator()(const Eigen::Vector2d& q) const {
     // Define Urep
     double Urep = 0;
     for(auto& obstacle : problem.obstacles) {
-        double distance = distanceToObstacle(q, obstacle);
+        double distance = distanceToObstacle(q, obstacle, closest_point);
         if(distance <= Q_star) {
             Urep += 0.5 * eta * (1/distance - 1/Q_star) * (1/distance - 1/Q_star);
         }
@@ -47,7 +79,7 @@ double MyPotentialFunction::distanceBetween(const Eigen::Vector2d& q1, const Eig
 
 
 
-double MyPotentialFunction::distanceToObstacle(const Eigen::Vector2d& q, const amp::Obstacle2D& obstacle) const{
+double MyPotentialFunction::distanceToObstacle(const Eigen::Vector2d& q, const amp::Obstacle2D& obstacle, Eigen::Vector2d& closest_point) const{
     // Find the minimum distance to an obstacle edge
     double min_distance = std::numeric_limits<double>::max();
     double distance;
@@ -59,7 +91,7 @@ double MyPotentialFunction::distanceToObstacle(const Eigen::Vector2d& q, const a
         Eigen::Vector2d B = vertices[(i+1) % vertices.size()];
 
         // Calculate distance to the line segment
-        distance = minDistance(A, B, q);
+        distance = minDistanceToLine(A, B, q, closest_point);
         if(distance < min_distance) {
             min_distance = distance;
         }
@@ -69,47 +101,49 @@ double MyPotentialFunction::distanceToObstacle(const Eigen::Vector2d& q, const a
 
 
 // Got this function from Geeks4Geeks
-double MyPotentialFunction::minDistance(const Eigen::Vector2d A, const Eigen::Vector2d B, const Eigen::Vector2d E) const{
-    // vector AB
+double MyPotentialFunction::minDistanceToLine(const Eigen::Vector2d A, const Eigen::Vector2d B, const Eigen::Vector2d P, Eigen::Vector2d& closest_point) const{
+    // vector AB and AP
     Eigen::Vector2d AB(B - A);
- 
-    // vector BP
-    Eigen::Vector2d BE(E - B);
- 
-    // vector AE
-    Eigen::Vector2d AE(E - A);
- 
-    // Variables to store dot product
-    double AB_BE, AB_AE;
- 
-    // Calculating the dot product
-    AB_BE = AB.dot(BE);
-    AB_AE = AB.dot(AE);
- 
-    // Minimum distance from
-    // point E to the line segment
-    double reqAns = 0;
- 
-    // Case 1
-    if (AB_BE > 0) {
-        // Finding the magnitude
-        Eigen::Vector2d C(E - B);
-        reqAns = C.norm();
+    Eigen::Vector2d AP(P - A);
+
+    // Project AP onto AB
+    double projection = AP.dot(AB) / (AB.dot(AB));
+
+    // Clamp the projection to between 0 and 1
+    projection = std::max(0.0, std::min(1.0, projection));
+
+    // Calculate the closest point
+    closest_point = A + projection * AB;
+
+    // Return the distance
+    return (P - closest_point).norm();
+}
+
+// Calculate the gradient of the potential function at a given point
+Eigen::Vector2d MyPotentialFunction::gradient(const Eigen::Vector2d& q) const {
+    // Calculate the gradient of the potential function at the given point
+    Eigen::Vector2d gradient;
+    gradient.setZero();
+
+    // Calculate the gradient of the potential function at the given point
+    const Eigen::Vector2d q_goal = problem.q_goal;
+
+    // Calculate the gradient of Uatt
+    if(distanceBetween(q, q_goal) <= d_star) {
+        gradient += zetta * (q - q_goal);
+    } else {
+        gradient += d_star * zetta * (q - q_goal) / distanceBetween(q, q_goal);
     }
-    // Case 2
-    else if (AB_AE < 0) {
-        Eigen::Vector2d C(E - A);
-        reqAns = C.norm();
+
+    // Calculate the gradient of Urep
+    for(auto& obstacle : problem.obstacles) {
+        Eigen::Vector2d closest_point;
+        double distance = distanceToObstacle(q, obstacle, closest_point);
+        if(distance <= Q_star) {
+            Eigen::Vector2d gradient_rep = (q - closest_point) / (distance);
+            gradient += eta * -1 * gradient_rep / (distance * distance) * (1/distance - 1/Q_star);
+        }
     }
-    // Case 3
-    else {
-        // Finding the perpendicular distance
-        double x1 = AB.x();
-        double y1 = AB.y();
-        double x2 = AE.x();
-        double y2 = AE.y();
-        double mod = sqrt(x1 * x1 + y1 * y1);
-        reqAns = abs(x1 * y2 - y1 * x2) / mod;
-    }
-    return reqAns;
+
+    return gradient;
 }

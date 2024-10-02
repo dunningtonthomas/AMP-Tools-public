@@ -40,14 +40,17 @@ class MyPotentialFunction : public amp::PotentialFunction2D {
 		// Returns the potential function value (height) for a given 2D point. 
         virtual double operator()(const Eigen::Vector2d& q) const override;
 
+		// Calculate the gradient of the potential function at a given point
+		Eigen::Vector2d gradient(const Eigen::Vector2d& q) const;
+
 		// Distance to goal function
 		double distanceBetween(const Eigen::Vector2d& q1, const Eigen::Vector2d& q2) const;
 
 		// Distance to obstacle function
-		double distanceToObstacle(const Eigen::Vector2d& q, const amp::Obstacle2D& obstacle) const;
+		double distanceToObstacle(const Eigen::Vector2d& q, const amp::Obstacle2D& obstacle, Eigen::Vector2d& closest_point) const;
 
 		// Distance from point to a line segment
-		double minDistance(const Eigen::Vector2d A, const Eigen::Vector2d B, const Eigen::Vector2d E) const;
+		double minDistanceToLine(const Eigen::Vector2d A, const Eigen::Vector2d B, const Eigen::Vector2d E, Eigen::Vector2d& closest_point) const;
 
 	private:
 		amp::Problem2D problem;
