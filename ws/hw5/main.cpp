@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     // Test your gradient descent algorithm on a random problem.
-    //double d_star = 2.0, zetta = 3.0, Q_star = 1.0, eta = 1.5;
-    double d_star = 2.0, zetta = 0.9, Q_star = 0.5, eta = 1.5;
+    double d_star = 2.0, zetta = 3.0, Q_star = 1.0, eta = 1.5;
+    //double d_star = 2.0, zetta = 3.0, Q_star = 1.0, eta = 0.5;
     MyGDAlgorithm algo(d_star, zetta, Q_star, eta);
 
     // Test on a random problem
@@ -31,21 +31,23 @@ int main(int argc, char** argv) {
     // Test on the first workspace
     // amp::Problem2D prob = HW5::getWorkspace1();
     // amp::Path2D path = algo.plan(prob);
+    // LOG("path length: " << path.length());
 
     // Test hw2 workspace
-    amp::Problem2D prob = HW2::getWorkspace1();
-    amp::Path2D path = algo.plan(prob);
-
-    // Test hw2 workspace
-    // amp::Problem2D prob = HW2::getWorkspace2();
+    // amp::Problem2D prob = HW2::getWorkspace1();
     // amp::Path2D path = algo.plan(prob);
 
+    // Test hw2 workspace
+    amp::Problem2D prob = HW2::getWorkspace2();
+    amp::Path2D path = algo.plan(prob);
+
     // Visualize your potential function
+    LOG("path length: " << path.length());
     amp::Visualizer::makeFigure(prob, path);
-    amp::Visualizer::makeFigure(MyPotentialFunction{prob, d_star, zetta, Q_star, eta}, prob.x_min, prob.x_max, prob.y_min, prob.y_max, 500);
+    amp::Visualizer::makeFigure(MyPotentialFunction{prob, d_star, zetta, Q_star, eta}, prob, 50);
     Visualizer::showFigures();
     
     // Arguments following argv correspond to the constructor arguments of MyGDAlgorithm:
-    //HW5::grade<MyGDAlgorithm>("nonhuman.biologic@myspace.edu", argc, argv, d_star, zetta, Q_star, eta);
+    //HW5::grade<MyGDAlgorithm>("thomas.dunnington@colorado.edu", argc, argv, d_star, zetta, Q_star, eta);
     return 0;
 }

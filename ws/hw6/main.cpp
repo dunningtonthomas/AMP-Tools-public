@@ -33,7 +33,7 @@ class MyAStarAlgo : public amp::AStar {
 int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
     
-    amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("nonhuman.biologic@myspace.edu", argc, argv, std::make_tuple(), std::make_tuple("hey therre"), std::make_tuple());
+    //amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("nonhuman.biologic@myspace.edu", argc, argv, std::make_tuple(), std::make_tuple("hey therre"), std::make_tuple());
     return 0;
 
 }

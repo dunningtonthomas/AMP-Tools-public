@@ -59,7 +59,5 @@ class MyPotentialFunction : public amp::PotentialFunction2D {
 		amp::Problem2D problem;
 		double d_star, zetta, Q_star, eta;
 
-		virtual Eigen::Vector2d getGradient(const Eigen::Vector2d& q) const override {
-            return Eigen::Vector2d(q[0] * q[0],  q[1] * q[1]);
-        }
+		virtual Eigen::Vector2d getGradient(const Eigen::Vector2d& q) const override;
 };
