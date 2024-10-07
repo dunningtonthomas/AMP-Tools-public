@@ -35,6 +35,9 @@ namespace amp{
     bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r);
     int orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 
 
+    // @brief Collision detection for point robot in polygon
+    bool isInsidePolygon(const amp::Polygon& Obstacle, Eigen::Vector2d p);
+
 } // namespace amp
 
 

@@ -174,5 +174,36 @@ namespace amp {
         return false;
     }
 
+    // @brief Collision checker for in polygon point robot detection, from Geeks4Geeks
+    bool isInsidePolygon(const amp::Polygon& Obstacle, Eigen::Vector2d p) {
+        // Get the vertices
+        std::vector<Eigen::Vector2d> vertices = Obstacle.verticesCCW();
+
+        // Number of vertices
+        int n = vertices.size();
+
+        // Create a point for the ray cast (far right)
+        Eigen::Vector2d extreme(10000, p.y());
+
+        // Count intersections of the polygon edges with the ray
+        int count = 0, i = 0;
+        do {
+            int next_index = (i + 1) % n;
+
+            // Check if the line segment from polygon[i] to polygon[next] intersects the ray
+            if (intersect(vertices[i], vertices[next_index], p, extreme)) {
+                // Check if the point is collinear with a polygon edge
+                if (orientation(vertices[i], p, vertices[next_index]) == 0) {
+                    return onSegment(vertices[i], p, vertices[next_index]);
+                }
+                count++;
+            }
+            i = next_index;
+        } while (i != 0);
+
+        // Return true if the count is odd (point is inside), false otherwise
+        return (count % 2 == 1);
+    }
+
 } // namespace amp
 

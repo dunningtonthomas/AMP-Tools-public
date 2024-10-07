@@ -6,6 +6,8 @@
 #include "MyAStar.h"
 #include "MyCSConstructors.h"
 #include "ManipulatorSkeleton.h"
+#include "CSpaceSkeleton.h"
+#include "ManipulatorSkeleton.h"
 
 using namespace amp;
 
@@ -19,8 +21,12 @@ int main(int argc, char** argv) {
     Problem2D manip_problem = HW6::getHW4Problem2();
     
     // Construct point-agent and manipulator cspace instances.
-    std::size_t n_cells = 5;
+    std::size_t n_cells = 100;
+
+    // Need to implement the following method in MyCSConstructors.cpp
     std::shared_ptr<MyPointAgentCSConstructor> point_agent_ctor = std::make_shared<MyPointAgentCSConstructor>(n_cells);
+    
+    // This should already be implemented from hw4
     std::shared_ptr<MyManipulatorCSConstructor> manipulator_ctor = std::make_shared<MyManipulatorCSConstructor>(n_cells);
     std::shared_ptr<WaveFrontAlgorithm> wf_algo = std::make_shared<MyWaveFrontAlgorithm>();
     
@@ -49,6 +55,6 @@ int main(int argc, char** argv) {
 
     Visualizer::showFigures();
 
-    amp::HW6::grade<PointWaveFrontAlgorithm, ManipulatorWaveFrontAlgorithm, MyAStarAlgo>("nonhuman.biologic@myspace.edu", argc, argv, std::make_tuple(wf_algo, point_agent_ctor), std::make_tuple(wf_algo, manipulator_ctor), std::make_tuple());
+    //amp::HW6::grade<PointWaveFrontAlgorithm, ManipulatorWaveFrontAlgorithm, MyAStarAlgo>("nonhuman.biologic@myspace.edu", argc, argv, std::make_tuple(wf_algo, point_agent_ctor), std::make_tuple(wf_algo, manipulator_ctor), std::make_tuple());
     return 0;
 }
