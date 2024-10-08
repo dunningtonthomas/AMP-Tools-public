@@ -8,6 +8,7 @@
 
 // Include helper functions
 #include "helperFuncs.h"
+#include <cmath>
 
 // Derive the amp::GridCSpace2D class and override the missing method
 class MyGridCSpace2D : public amp::GridCSpace2D {

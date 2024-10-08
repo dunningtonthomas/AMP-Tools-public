@@ -30,6 +30,8 @@ std::unique_ptr<amp::GridCSpace2D> MyManipulatorCSConstructor::construct(const a
     // In order to use the pointer as a regular GridCSpace2D object, we can just create a reference
     MyGridCSpace2D& cspace = *cspace_ptr;
 
+    std::cout << "Calculating Cspace for manipulator....." << std::endl;
+
     // Iterate through each joint configuration and check if it is in collision
     double step_size = 2 * M_PI / m_cells_per_dim;
     for(std::size_t i = 0; i < m_cells_per_dim; i++) {
