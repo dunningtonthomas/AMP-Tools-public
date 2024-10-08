@@ -34,23 +34,16 @@ std::unique_ptr<amp::GridCSpace2D> MyPointAgentCSConstructor::construct(const am
     return cspace_ptr;
 }
 
-// @brief Function to check if a point is in collision with an obstacle
-bool MyPointAgentCSConstructor::inCollision_point(const amp::Environment2D& env, const Eigen::Vector2d& point) {
-    // Loop through all the obstacles
-    for(const auto& obstacle : env.obstacles) {
-        // Check if the point is inside the obstacle
-        if(isInsidePolygon(obstacle, point)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace) {
+amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, bool isManipulator) {
     // Implement your WaveFront algorithm here
     // This path should be in continuous space
     amp::Path2D path;
     path.waypoints.push_back(q_init);
     path.waypoints.push_back(q_goal);
+    if (isManipulator) {
+        Eigen::Vector2d bounds0 = Eigen::Vector2d(0.0, 0.0);
+        Eigen::Vector2d bounds1 = Eigen::Vector2d(2*M_PI, 2*M_PI);
+        amp::unwrapWaypoints(path.waypoints, bounds0, bounds1);
+    }
     return path;
 }
