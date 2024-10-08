@@ -30,8 +30,6 @@ std::unique_ptr<amp::GridCSpace2D> MyManipulatorCSConstructor::construct(const a
     // In order to use the pointer as a regular GridCSpace2D object, we can just create a reference
     MyGridCSpace2D& cspace = *cspace_ptr;
 
-    std::cout << "Calculating Cspace for manipulator....." << std::endl;
-
     // Iterate through each joint configuration and check if it is in collision
     double step_size = 2 * M_PI / m_cells_per_dim;
     for(std::size_t i = 0; i < m_cells_per_dim; i++) {
@@ -57,8 +55,6 @@ std::unique_ptr<amp::GridCSpace2D> MyManipulatorCSConstructor::construct(const a
     // The reason why this works is not super important for our purposes, but if you are curious, look up polymorphism!
     return cspace_ptr;
 }
-
-
 
 // @brief Collision Checker for manipulator using line segment intersection
 bool MyManipulatorCSConstructor::inCollision_manipulator(const amp::Environment2D& env, const amp::LinkManipulator2D& manipulator, amp::ManipulatorState joint_angles) {
