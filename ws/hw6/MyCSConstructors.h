@@ -12,6 +12,7 @@
 
 // Include the helper functions
 #include "helperFuncs.h"
+#include <queue>
 
 // Derive the PointAgentCSConstructor class and override the missing method
 class MyPointAgentCSConstructor : public amp::PointAgentCSConstructor {
@@ -33,5 +34,7 @@ class MyWaveFrontAlgorithm : public amp::WaveFrontAlgorithm {
     public:
         virtual amp::Path2D planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, bool isManipulator) override;
 
+        // Return a continuous point from a cell
+        Eigen::Vector2d getPointFromCell(const amp::GridCSpace2D& grid_cspace, std::pair<std::size_t, std::size_t> cell) const;
 };
 

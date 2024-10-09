@@ -49,11 +49,9 @@ bool MyPointAgentCSConstructor::inCollision_point(const amp::Environment2D& env,
 
 
 amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, bool isManipulator) {
-    // Implement your WaveFront algorithm here
-    // This path should be in continuous space
+    // Wavefront algorithm to find the shortest path from q_init to q_goal
     amp::Path2D path;
     path.waypoints.push_back(q_init);
-    path.waypoints.push_back(q_goal);
 
     // Get the number of cells in the C-space
     std::pair<std::size_t, std::size_t> n_cells = grid_cspace.size();
@@ -63,7 +61,20 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
     for(std::size_t i = 0; i < n_cells.first; i++) {
         for(std::size_t j = 0; j < n_cells.second; j++) {
             if(grid_cspace(i, j)) {
+                // Set distance of obstacle to 1 and add buffer of 1 cell in every direction
                 distanceArr[i][j] = 1;
+                if(i > 0) {
+                    distanceArr[i-1][j] = 1;
+                }
+                if(i < n_cells.first - 1) {
+                    distanceArr[i+1][j] = 1;
+                }
+                if(j > 0) {
+                    distanceArr[i][j-1] = 1;
+                }
+                if(j < n_cells.second - 1) {
+                    distanceArr[i][j+1] = 1;
+                }
             } else {
                 distanceArr[i][j] = 0;
             }
@@ -108,8 +119,10 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
     // Get the path from the initial cell to the goal cell
     std::pair<std::size_t, std::size_t> curr_cell = init_cell;
     bool found_goal = false;
+    int max_iterations = 1000;
+    int iterations = 0;
 
-    while(!found_goal) {
+    while(!found_goal && iterations < max_iterations) {
         // Loop through all neigbors and push them onto a vector
         std::vector<std::pair<std::size_t, std::size_t>> neighbors;
         std::vector<double> distance;
@@ -132,9 +145,30 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
             distance.push_back(distanceArr[curr_cell.first][curr_cell.second+1]);
         }
 
+        // Find the neighbor with the smallest distance that is not an obstace (distance = 1)
+        double min_distance = std::numeric_limits<double>::max();
+        std::size_t min_index = 0;
+        for(std::size_t i = 0; i < distance.size(); i++) {
+            if(distance[i] < min_distance && distance[i] != 1) {
+                min_distance = distance[i];
+                min_index = i;
+            }
+        }
 
+        // Check if the goal has been reached
+        if(min_distance == 2) {
+            found_goal = true;
+        }
+
+        // Add the neighbor to the path
+        curr_cell = neighbors[min_index];
+        path.waypoints.push_back(getPointFromCell(grid_cspace, curr_cell));
+        iterations++;
+        //std::cout << "Iteration: " << iterations << std::endl;
     }
 
+    // Add goal
+    path.waypoints.push_back(q_goal);
 
 
     if (isManipulator) {
@@ -143,4 +177,24 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
         amp::unwrapWaypoints(path.waypoints, bounds0, bounds1);
     }
     return path;
+}
+
+
+
+// Return a continuous point from a cell
+Eigen::Vector2d MyWaveFrontAlgorithm::getPointFromCell(const amp::GridCSpace2D& grid_cspace, std::pair<std::size_t, std::size_t> cell) const {
+    // Get the bounds of the cell
+    std::pair<double, double> x0_bounds = grid_cspace.x0Bounds();
+    std::pair<double, double> x1_bounds = grid_cspace.x1Bounds();
+    std::pair<std::size_t, std::size_t> num_cells = grid_cspace.size();
+
+    // Get the cell size
+    double x0_cell_size = (x0_bounds.second - x0_bounds.first) / num_cells.first;
+    double x1_cell_size = (x1_bounds.second - x1_bounds.first) / num_cells.second;
+
+    // Get the point
+    double x0 = x0_bounds.first + (cell.first + 0.5) * x0_cell_size;
+    double x1 = x1_bounds.first + (cell.second + 0.5) * x1_cell_size;
+
+    return Eigen::Vector2d(x0, x1);
 }
