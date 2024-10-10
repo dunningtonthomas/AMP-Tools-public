@@ -249,7 +249,6 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
 }
 
 
-
 // Return a continuous point from a cell
 Eigen::Vector2d MyWaveFrontAlgorithm::getPointFromCell(const amp::GridCSpace2D& grid_cspace, std::pair<std::size_t, std::size_t> cell) const {
     // Get the bounds of the cell

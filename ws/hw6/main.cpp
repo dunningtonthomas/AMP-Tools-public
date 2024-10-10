@@ -45,13 +45,13 @@ int main(int argc, char** argv) {
     Visualizer::makeFigure(*manip_algo.getCSpace(), trajectory);
 
     // For Exercise 3, you will need to implement the A* algorithm.
-    // ShortestPathProblem problem = HW6::getEx3SPP();
-    // LookupSearchHeuristic heuristic = HW6::getEx3Heuristic();
-    // MyAStarAlgo algo;
-    // MyAStarAlgo::GraphSearchResult result = algo.search(problem, heuristic);
+    ShortestPathProblem problem = HW6::getEx3SPP();
+    LookupSearchHeuristic heuristic = HW6::getEx3Heuristic();
+    MyAStarAlgo algo;
+    MyAStarAlgo::GraphSearchResult result = algo.search(problem, heuristic);
 
 
-    Visualizer::showFigures();
-    amp::HW6::grade<PointWaveFrontAlgorithm, ManipulatorWaveFrontAlgorithm, MyAStarAlgo>("nonhuman.biologic@myspace.edu", argc, argv, std::make_tuple(wf_algo, point_agent_ctor), std::make_tuple(wf_algo, manipulator_ctor), std::make_tuple());
+    //Visualizer::showFigures();
+    //amp::HW6::grade<PointWaveFrontAlgorithm, ManipulatorWaveFrontAlgorithm, MyAStarAlgo>("nonhuman.biologic@myspace.edu", argc, argv, std::make_tuple(wf_algo, point_agent_ctor), std::make_tuple(wf_algo, manipulator_ctor), std::make_tuple());
     return 0;
 }
