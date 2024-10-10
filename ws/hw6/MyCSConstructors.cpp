@@ -49,9 +49,29 @@ bool MyPointAgentCSConstructor::inCollision_point(const amp::Environment2D& env,
 
 
 amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, bool isManipulator) {
+    // Convert to be within 0 to 2pi for the manipulator
+    Eigen::Vector2d q_init_copy = q_init;
+    Eigen::Vector2d q_goal_copy = q_goal;
+    if(isManipulator) {
+        Eigen::Vector2d x_add = Eigen::Vector2d(2 * M_PI, 0);
+        Eigen::Vector2d y_add = Eigen::Vector2d(0, 2 * M_PI);
+        if(q_init_copy.x() < 0) {
+            q_init_copy += x_add;
+        }
+        if(q_init_copy.y() < 0) {
+            q_init_copy += y_add;
+        }
+        if(q_goal_copy.x() < 0) {
+            q_goal_copy += x_add;
+        }
+        if(q_goal_copy.y() < 0) {
+            q_goal_copy += y_add;
+        }
+    }
+    
     // Wavefront algorithm to find the shortest path from q_init to q_goal
     amp::Path2D path;
-    path.waypoints.push_back(q_init);
+    path.waypoints.push_back(q_init_copy);
 
     // Get the number of cells in the C-space
     std::pair<std::size_t, std::size_t> n_cells = grid_cspace.size();
@@ -82,7 +102,7 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
     }
 
     // Set the goal cell to 2
-    std::pair<std::size_t, std::size_t> goal_cell = grid_cspace.getCellFromPoint(q_goal(0), q_goal(1));
+    std::pair<std::size_t, std::size_t> goal_cell = grid_cspace.getCellFromPoint(q_goal_copy(0), q_goal_copy(1));
     distanceArr[goal_cell.first][goal_cell.second] = 2;
 
     // Create a queue of cell locations
@@ -111,10 +131,34 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
             distanceArr[cell.first][cell.second+1] = distanceArr[cell.first][cell.second] + 1;
             q.push({cell.first, cell.second+1});
         }
+
+        // Angle wrapping for the maniuplator
+        if(isManipulator) {
+            // Case for being on the left edge of the environment and need to wrap
+            if(cell.first == 0 && distanceArr[n_cells.first - 1][cell.second] == 0) {
+                distanceArr[n_cells.first - 1][cell.second] = distanceArr[cell.first][cell.second] + 1;
+                q.push({n_cells.first - 1, cell.second});
+            }
+            // Case for being on the right edge of the environment and need to wrap
+            if(cell.first == n_cells.first - 1 && distanceArr[0][cell.second] == 0) {
+                distanceArr[0][cell.second] = distanceArr[cell.first][cell.second] + 1;
+                q.push({0, cell.second});
+            }
+            // Case for being on the bottom edge of the environment and need to wrap
+            if(cell.second == 0 && distanceArr[cell.first][n_cells.second - 1] == 0) {
+                distanceArr[cell.first][n_cells.second - 1] = distanceArr[cell.first][cell.second] + 1;
+                q.push({cell.first, n_cells.second - 1});
+            }
+            // Case for being on the top edge of the environment and need to wrap
+            if(cell.second == n_cells.second - 1 && distanceArr[cell.first][0] == 0) {
+                distanceArr[cell.first][0] = distanceArr[cell.first][cell.second] + 1;
+                q.push({cell.first, 0});
+            }
+        }
     }
 
     // Get the initial cell
-    std::pair<std::size_t, std::size_t> init_cell = grid_cspace.getCellFromPoint(q_init(0), q_init(1));
+    std::pair<std::size_t, std::size_t> init_cell = grid_cspace.getCellFromPoint(q_init_copy(0), q_init_copy(1));
 
     // Get the path from the initial cell to the goal cell
     std::pair<std::size_t, std::size_t> curr_cell = init_cell;
@@ -145,6 +189,30 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
             distance.push_back(distanceArr[curr_cell.first][curr_cell.second+1]);
         }
 
+        // Angle wrapping for the maniuplator
+        if(isManipulator) {
+            // Case for being on the left edge of the environment and need to wrap
+            if(curr_cell.first == 0) {
+                neighbors.push_back({n_cells.first - 1, curr_cell.second});
+                distance.push_back(distanceArr[n_cells.first - 1][curr_cell.second]);
+            }
+            // Case for being on the right edge of the environment and need to wrap
+            if(curr_cell.first == n_cells.first - 1) {
+                neighbors.push_back({0, curr_cell.second});
+                distance.push_back(distanceArr[0][curr_cell.second]);
+            }
+            // Case for being on the bottom edge of the environment and need to wrap
+            if(curr_cell.second == 0) {
+                neighbors.push_back({curr_cell.first, n_cells.second - 1});
+                distance.push_back(distanceArr[curr_cell.first][n_cells.second - 1]);
+            }
+            // Case for being on the top edge of the environment and need to wrap
+            if(curr_cell.second == n_cells.second - 1) {
+                neighbors.push_back({curr_cell.first, 0});
+                distance.push_back(distanceArr[curr_cell.first][0]);
+            }
+        }
+
         // Find the neighbor with the smallest distance that is not an obstace (distance = 1)
         double min_distance = std::numeric_limits<double>::max();
         std::size_t min_index = 0;
@@ -168,9 +236,10 @@ amp::Path2D MyWaveFrontAlgorithm::planInCSpace(const Eigen::Vector2d& q_init, co
     }
 
     // Add goal
-    path.waypoints.push_back(q_goal);
+    path.waypoints.push_back(q_goal_copy);
 
 
+    // Unwrap the path for the manipulator
     if (isManipulator) {
         Eigen::Vector2d bounds0 = Eigen::Vector2d(0.0, 0.0);
         Eigen::Vector2d bounds1 = Eigen::Vector2d(2*M_PI, 2*M_PI);
