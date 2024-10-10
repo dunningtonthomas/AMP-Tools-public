@@ -50,8 +50,23 @@ int main(int argc, char** argv) {
     MyAStarAlgo algo;
     MyAStarAlgo::GraphSearchResult result = algo.search(problem, heuristic);
 
+    // Create a heuristic with all zeros
+    LookupSearchHeuristic zero_heuristic;
+    for(auto node : problem.graph->nodes()) {
+        zero_heuristic.heuristic_values[node] = 0.0;
+    }
+
+    // Solve with Dijkstra's algorithm
+    MyAStarAlgo dijkstra_algo;
+    MyAStarAlgo::GraphSearchResult dijkstra_result = dijkstra_algo.search(problem, zero_heuristic);
+
+    // Print results
+    std::cout << "A* result: " << std::endl;
+    result.print();
+    std::cout << "Dijkstra result: " << std::endl;
+    dijkstra_result.print();
 
     //Visualizer::showFigures();
-    //amp::HW6::grade<PointWaveFrontAlgorithm, ManipulatorWaveFrontAlgorithm, MyAStarAlgo>("nonhuman.biologic@myspace.edu", argc, argv, std::make_tuple(wf_algo, point_agent_ctor), std::make_tuple(wf_algo, manipulator_ctor), std::make_tuple());
+    //amp::HW6::grade<PointWaveFrontAlgorithm, ManipulatorWaveFrontAlgorithm, MyAStarAlgo>("thomas.dunnington@colorado.edu", argc, argv, std::make_tuple(wf_algo, point_agent_ctor), std::make_tuple(wf_algo, manipulator_ctor), std::make_tuple());
     return 0;
 }
