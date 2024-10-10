@@ -19,6 +19,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     pq.push({heuristic(problem.init_node), problem.init_node});
     cost_map[problem.init_node] = 0.0;
 
+    int iterations = 0; 
     while(!pq.empty()) {
         // Get the current node
         amp::Node curr_node = pq.top().second;
@@ -54,11 +55,12 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
                 parent_map[neighbor] = curr_node;
             }
         }
+        iterations++;
     }
 
     if(result.success) {
         // Get the path from the goal to the initial node
-        std::cout << "Path found, reconstructing path..." << std::endl;
+        std::cout << "Path found in "<< iterations << " iterations, reconstructing path..." << std::endl;
         amp::Node curr_node = problem.goal_node;
         result.path_cost = cost_map[curr_node];
         while(curr_node != problem.init_node) {
