@@ -205,5 +205,36 @@ namespace amp {
         return (count % 2 == 1);
     }
 
+    // @brief Generate a random configuration in the workspace
+    Eigen::Vector2d randomConfiguration(const amp::Environment2D& env) {
+        // Create a random number generator
+        std::random_device rd;  // Random seed
+        std::mt19937 gen(rd()); // Mersenne Twister generator
+
+        // Define the uniform distribution between -5 and 5
+        std::uniform_real_distribution<double> x_rand(env.x_min, env.x_max);
+        std::uniform_real_distribution<double> y_rand(env.y_min, env.y_max);
+
+        // Sample a random point in the environment
+        Eigen::Vector2d q_rand(x_rand(gen), y_rand(gen));
+        return q_rand;
+    }
+
+    // @brief Function to check if a point is in collision with an obstacle
+    bool inCollision_point(const amp::Environment2D& env, Eigen::Vector2d point) {
+        // Loop through all the obstacles
+        for(const auto& obstacle : env.obstacles) {
+            // Check if the point is inside the obstacle
+            if(isInsidePolygon(obstacle, point)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // @brief Calculates the distance between two points
+    double distance(Eigen::Vector2d p1, Eigen::Vector2d p2) {
+        return (p1 - p2).norm();
+    }
 } // namespace amp
 

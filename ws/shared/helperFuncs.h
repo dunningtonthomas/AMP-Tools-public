@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <random>
 
 namespace amp{
     // @brief Print the vertices of an obstacle
@@ -37,7 +38,13 @@ namespace amp{
 
     // @brief Collision detection for point robot in polygon
     bool isInsidePolygon(const amp::Polygon& Obstacle, Eigen::Vector2d p);
+    bool inCollision_point(const amp::Environment2D& env, Eigen::Vector2d point);
 
+    // @brief generate a Eigen::Vector2d configuration in the workspace
+    Eigen::Vector2d randomConfiguration(const amp::Environment2D& env);
+
+    // @brief Calculate the distance between two points
+    double distance(Eigen::Vector2d p1, Eigen::Vector2d p2);
 } // namespace amp
 
 

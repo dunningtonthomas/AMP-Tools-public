@@ -17,21 +17,28 @@ int main(int argc, char** argv) {
     for (amp::Node i = 0; i < points.size(); ++i) nodes[i] = points[i]; // Add point-index pair to the map
     std::vector<std::tuple<amp::Node, amp::Node, double>> edges = {{0, 4, 1}, {0, 5, 1}, {4, 5, 1}, {1, 2, 1}, {1, 3, 1}, {2, 3, 1}}; // Edges to connect
     for (const auto& [from, to, weight] : edges) graphPtr->connect(from, to, weight); // Connect the edges in the graph
-    graphPtr->print();
+    //graphPtr->print();
 
     // Test PRM on Workspace1 of HW2
+    int n = 200;
+    double r = 2;
     Problem2D problem = HW2::getWorkspace1();
-    MyPRM prm;
-    Visualizer::makeFigure(problem, prm.plan(problem), *graphPtr, nodes);
+    MyPRM prm(n, r);
+    //Visualizer::makeFigure(problem, prm.plan(problem), *graphPtr, nodes);
+
+    // Test the PRM graph
+    std::map<amp::Node, Eigen::Vector2d> prm_nodes;
+    std::shared_ptr<amp::Graph<double>> prm_graph = prm.createGraph(problem, prm_nodes);
+    Visualizer::makeFigure(problem, prm.plan(problem), *prm_graph, prm_nodes);
 
     // Generate a random problem and test RRT
-    MyRRT rrt;
-    Path2D path;
-    HW7::generateAndCheck(rrt, path, problem);
-    Visualizer::makeFigure(problem, path, *graphPtr, nodes);
-    Visualizer::showFigures();
-
+    // MyRRT rrt;
+    // Path2D path;
+    // HW7::generateAndCheck(rrt, path, problem);
+    // Visualizer::makeFigure(problem, path, *graphPtr, nodes);
+    
     // Grade method
-    HW7::grade<MyPRM, MyRRT>("firstName.lastName@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
+    Visualizer::showFigures();
+    //HW7::grade<MyPRM, MyRRT>("firstName.lastName@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
     return 0;
 }
