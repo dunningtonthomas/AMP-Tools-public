@@ -18,7 +18,7 @@
 class MyPRM : public amp::PRM2D {
     public:
         // Default constructor
-        MyPRM() : n(200), r(1) {}
+        MyPRM() : n(400), r(3) {}
 
         // constructor to populate n and r
         MyPRM(int n, double r) : n(n), r(r) {}
