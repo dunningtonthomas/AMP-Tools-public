@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     std::cout << "Dijkstra result: " << std::endl;
     dijkstra_result.print();
 
-    Visualizer::showFigures();
+    //Visualizer::showFigures();
     amp::HW6::grade<PointWaveFrontAlgorithm, ManipulatorWaveFrontAlgorithm, MyAStarAlgo>("thomas.dunnington@colorado.edu", argc, argv, std::make_tuple(wf_algo, point_agent_ctor), std::make_tuple(wf_algo, manipulator_ctor), std::make_tuple());
     return 0;
 }
