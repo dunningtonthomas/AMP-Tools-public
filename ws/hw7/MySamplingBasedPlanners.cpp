@@ -91,8 +91,55 @@ std::shared_ptr<amp::Graph<double>> MyPRM::createGraph(const amp::Problem2D& pro
 
 // Implement your RRT algorithm here
 amp::Path2D MyRRT::plan(const amp::Problem2D& problem) {
+    // Create nodes map
+    std::map<amp::Node, Eigen::Vector2d> nodes;
+
+    // Edges vector
+    std::vector<std::tuple<amp::Node, amp::Node, double>> edges;
+
+
+    // Iterate to find the goal
+    int iteration = 0;
+    while(iteration < max_iterations) {
+        // Generate random sample in the environment
+        Eigen::Vector2d q_rand = amp::randomConfiguration(problem);
+
+        // Check if the sampled point is valid
+        if(!inCollision_point(problem, q_rand)) {
+            // Add the point to the graph
+            amp::Node add_node = nodes.size();
+            nodes[add_node] = q_rand;
+
+            // Find the nearest neigbor to the random point
+            amp::Node nearest_node = nearestNeighbor(q_rand, nodes);
+
+            // Connect the nodes and check for collision
+
+        }
+
+        iteration++;
+    }
+
+
+
+
+
     amp::Path2D path;
     path.waypoints.push_back(problem.q_init);
     path.waypoints.push_back(problem.q_goal);
     return path;
+}
+
+
+amp::Node MyRRT::nearestNeighbor(const Eigen::Vector2d& q_rand, const std::map<amp::Node, Eigen::Vector2d>& nodes) {
+    amp::Node nearest_node = 0;
+    double min_distance = std::numeric_limits<double>::max();
+    for(const auto& [node, point] : nodes) {
+        double distance = amp::distance(point, q_rand);
+        if(distance < min_distance && distance != 0) {
+            min_distance = distance;
+            nearest_node = node;
+        }
+    }
+    return nearest_node;
 }

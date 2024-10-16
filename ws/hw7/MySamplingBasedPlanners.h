@@ -36,5 +36,22 @@ class MyPRM : public amp::PRM2D {
 
 class MyRRT : public amp::GoalBiasRRT2D {
     public:
+        // Default constructor
+        MyRRT() : step_size(0.5), goal_bias(0.1), max_iterations(1000), epsilon(0.1) {}
+
+        // constructor to populate step_size, goal_bias, max_iterations, and epsilon
+        MyRRT(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e) {}
+
+
+        // @brief Find path using RRT
         virtual amp::Path2D plan(const amp::Problem2D& problem) override; 
+
+        // @brief Find the nearest neighbor to a node in the graph
+        amp::Node nearestNeighbor(const Eigen::Vector2d& q_rand, const std::map<amp::Node, Eigen::Vector2d>& nodes);
+
+    private:
+        double step_size;
+        double goal_bias;
+        int max_iterations;
+        double epsilon;
 };
