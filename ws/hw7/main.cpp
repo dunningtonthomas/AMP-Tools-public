@@ -10,12 +10,13 @@ int main(int argc, char** argv) {
     //HW7::hint(); // Consider implementing an N-dimensional planner 
 
     // Get the problem
-    //Problem2D problem = HW2::getWorkspace1();
-    Problem2D problem = HW5::getWorkspace1();
+    Problem2D problem = HW2::getWorkspace1();
+    //Problem2D problem = HW2::getWorkspace2();
+    //Problem2D problem = HW5::getWorkspace1();
 
     // Test PRM on Workspace1 of HW2
-    int n = 300;
-    double r = 1.5;
+    int n = 200;
+    double r = 1;
     MyPRM prm(n, r);
     Path2D prm_path = prm.plan(problem);
     std::map<amp::Node, Eigen::Vector2d> prm_nodes = prm.getNodes();
@@ -32,6 +33,6 @@ int main(int argc, char** argv) {
     
     // Grade method
     Visualizer::showFigures();
-    HW7::grade<MyPRM, MyRRT>("firstName.lastName@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
+    //HW7::grade<MyPRM, MyRRT>("firstName.lastName@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
     return 0;
 }

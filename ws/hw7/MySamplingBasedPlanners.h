@@ -23,10 +23,8 @@ class MyPRM : public amp::PRM2D {
         // constructor to populate n and r
         MyPRM(int n, double r) : n(n), r(r) {}
 
-        // @brief return the node map
+        // getter functions
         std::map<amp::Node, Eigen::Vector2d> getNodes() { return nodes; }
-
-        // @brief return the graph
         std::shared_ptr<amp::Graph<double>> getGraph() { return graphPtr; }
 
         // @brief Find path using PRM
@@ -54,10 +52,8 @@ class MyRRT : public amp::GoalBiasRRT2D {
         // constructor to populate step_size, goal_bias, max_iterations, and epsilon
         MyRRT(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e) {}
 
-        // @brief return the node map
+        // getter functions
         std::map<amp::Node, Eigen::Vector2d> getNodes() { return nodes; }
-
-        // @brief return the graph
         std::shared_ptr<amp::Graph<double>> getGraph() { return graphPtr; }
 
         // @brief Find path using RRT
@@ -80,4 +76,15 @@ class MyRRT : public amp::GoalBiasRRT2D {
         std::shared_ptr<amp::Graph<double>> graphPtr;
         std::map<amp::Node, Eigen::Vector2d> nodes;
         std::map<amp::Node, amp::Node> parents;
+};
+
+
+struct LookupSearchHeuristic : public amp::SearchHeuristic {
+	/// @brief Get the heuristic value stored in `heuristic_values`. 
+	/// @param node Node to get the heuristic value h(node) for. 
+	/// @return Heuristic value
+	virtual double operator()(amp::Node node) const override {return heuristic_values.at(node);}
+
+    /// @brief Store the heursitic values for each node in a map
+    std::map<amp::Node, double> heuristic_values; 
 };

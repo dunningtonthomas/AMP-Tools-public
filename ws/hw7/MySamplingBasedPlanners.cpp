@@ -1,4 +1,4 @@
-# include "MySamplingBasedPlanners.h"
+#include "MySamplingBasedPlanners.h"
 
 // @brief Execute PRM with n sampled configuartions and a connect a node to neighbors within radius r
 amp::Path2D MyPRM::plan(const amp::Problem2D& problem) {
@@ -12,10 +12,10 @@ amp::Path2D MyPRM::plan(const amp::Problem2D& problem) {
     graph_problem.goal_node = 1;
 
     // Create a heuristic using distance to the goal
-    amp::SearchHeuristic distance_heuristic;
-    // for(auto node : graphPtr->nodes()) {
-    //     distance_heuristic.heuristic_values[node] = amp::distance(nodes[node], problem.q_goal);
-    // }
+    LookupSearchHeuristic distance_heuristic;
+    for(auto node : graphPtr->nodes()) {
+        distance_heuristic.heuristic_values[node] = amp::distance(nodes[node], problem.q_goal);
+    }
 
     // Run A* to find the shortest path
     MyAStarAlgo astar;
