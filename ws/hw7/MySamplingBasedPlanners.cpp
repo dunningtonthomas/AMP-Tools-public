@@ -2,11 +2,8 @@
 
 // @brief Execute PRM with n sampled configuartions and a connect a node to neighbors within radius r
 amp::Path2D MyPRM::plan(const amp::Problem2D& problem) {
-    // Create the nodes map
-    std::map<amp::Node, Eigen::Vector2d> nodes;
-
     // Create the PRM graph
-    std::shared_ptr<amp::Graph<double>> graphPtr = createGraph(problem, nodes);
+    createGraph(problem);
 
     // Create the problem for the A* algorithm
     amp::ShortestPathProblem graph_problem;
@@ -34,7 +31,7 @@ amp::Path2D MyPRM::plan(const amp::Problem2D& problem) {
 }
 
 
-std::shared_ptr<amp::Graph<double>> MyPRM::createGraph(const amp::Problem2D& problem, std::map<amp::Node, Eigen::Vector2d>& nodes) {
+void MyPRM::createGraph(const amp::Problem2D& problem) {
     // Add the nodes to the graph
     amp::Node init_node = 0, goal_node = 1;
     nodes[init_node] = problem.q_init;
@@ -69,26 +66,17 @@ std::shared_ptr<amp::Graph<double>> MyPRM::createGraph(const amp::Problem2D& pro
     }
 
     // Create the graph
-    std::shared_ptr<amp::Graph<double>> graphPtr = std::make_shared<amp::Graph<double>>();
+    graphPtr = std::make_shared<amp::Graph<double>>();
     for (const auto& [from, to, weight] : edges) {
         graphPtr->connect(from, to, weight);
     }
-
-    // Return the graph
-    return graphPtr;
 }
 
 
 // Implement your RRT algorithm here
 amp::Path2D MyRRT::plan(const amp::Problem2D& problem) {
-    // Create the nodes map
-    std::map<amp::Node, Eigen::Vector2d> nodes;
-
-    // Create the parents map
-    std::map<amp::Node, amp::Node> parents;
-
     // Create the RRT graph
-    createGraph(problem, nodes, parents);
+    createGraph(problem);
 
     // If a solution is found, return the path to goal
     amp::Path2D path;
@@ -109,13 +97,14 @@ amp::Path2D MyRRT::plan(const amp::Problem2D& problem) {
         path.waypoints.push_back(problem.q_goal);
     }
 
+
     return path;
 }
 
 
 
 
-std::shared_ptr<amp::Graph<double>> MyRRT::createGraph(const amp::Problem2D& problem, std::map<amp::Node, Eigen::Vector2d>& nodes, std::map<amp::Node, amp::Node>& parents) {
+void MyRRT::createGraph(const amp::Problem2D& problem) {
     // Set the initial node to 0
     nodes[0] = problem.q_init;
 
@@ -138,7 +127,7 @@ std::shared_ptr<amp::Graph<double>> MyRRT::createGraph(const amp::Problem2D& pro
         // Check if the sampled point is valid
         if(!inCollision_point(problem, q_rand)) {
             // Find the nearest neigbor to the random point
-            amp::Node nearest_node = nearestNeighbor(q_rand, nodes);
+            amp::Node nearest_node = nearestNeighbor(q_rand);
 
             // Generate the path taking a step size
             Eigen::Vector2d q_near = nodes[nearest_node];
@@ -172,16 +161,14 @@ std::shared_ptr<amp::Graph<double>> MyRRT::createGraph(const amp::Problem2D& pro
     }
 
     // Create the graph
-    std::shared_ptr<amp::Graph<double>> graphPtr = std::make_shared<amp::Graph<double>>();
+    graphPtr = std::make_shared<amp::Graph<double>>();
     for (const auto& [from, to, weight] : edges) {
         graphPtr->connect(from, to, weight);
     }
-
-    return graphPtr;
 }
 
 
-amp::Node MyRRT::nearestNeighbor(const Eigen::Vector2d& q_rand, const std::map<amp::Node, Eigen::Vector2d>& nodes) {
+amp::Node MyRRT::nearestNeighbor(const Eigen::Vector2d& q_rand) {
     amp::Node nearest_node = 0;
     double min_distance = std::numeric_limits<double>::max();
     for(const auto& [node, point] : nodes) {
