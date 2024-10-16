@@ -220,6 +220,19 @@ namespace amp {
         return q_rand;
     }
 
+    // @brief Generate a random number between min and max
+    double randomDouble(double min, double max) {
+        // Create a random number generator
+        std::random_device rd;  // Random seed
+        std::mt19937 gen(rd()); // Mersenne Twister generator
+
+        // Define the uniform distribution between 0 and 1
+        std::uniform_real_distribution<double> dis(min, max);
+
+        // Sample a random number
+        return dis(gen);
+    }
+
     // @brief Function to check if a point is in collision with an obstacle
     bool inCollision_point(const amp::Environment2D& env, Eigen::Vector2d point) {
         // Loop through all the obstacles

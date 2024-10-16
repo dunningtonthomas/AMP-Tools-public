@@ -14,8 +14,8 @@ int main(int argc, char** argv) {
     Problem2D problem = HW5::getWorkspace1();
 
     // Test PRM on Workspace1 of HW2
-    int n = 200;
-    double r = 1;
+    int n = 300;
+    double r = 1.5;
     MyPRM prm(n, r);
     //Visualizer::makeFigure(problem, prm.plan(problem), *graphPtr, nodes);
 
@@ -25,10 +25,13 @@ int main(int argc, char** argv) {
     Visualizer::makeFigure(problem, prm.plan(problem), *prm_graph, prm_nodes);
 
     // Generate a random problem and test RRT
-    // MyRRT rrt;
-    // Path2D path;
-    // HW7::generateAndCheck(rrt, path, problem);
-    // Visualizer::makeFigure(problem, path, *graphPtr, nodes);
+    Path2D path;
+    MyRRT rrt;
+    std::map<amp::Node, Eigen::Vector2d> rrt_nodes;
+    std::map<amp::Node, amp::Node> rrt_parents;
+    std::shared_ptr<amp::Graph<double>> rrt_graph = rrt.createGraph(problem, rrt_nodes, rrt_parents);
+    //HW7::generateAndCheck(rrt, path, problem);
+    Visualizer::makeFigure(problem, rrt.plan(problem), *rrt_graph, rrt_nodes);
     
     // Grade method
     Visualizer::showFigures();
