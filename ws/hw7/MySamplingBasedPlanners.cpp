@@ -13,18 +13,35 @@ amp::Path2D MyPRM::plan(const amp::Problem2D& problem) {
 
     // Create a heuristic using distance to the goal
     LookupSearchHeuristic distance_heuristic;
-    for(auto node : graphPtr->nodes()) {
-        distance_heuristic.heuristic_values[node] = amp::distance(nodes[node], problem.q_goal);
+    for(auto [node, point] : nodes) {
+        // Set the init node heuristic to zero
+        if(node == 0) {
+            distance_heuristic.heuristic_values[node] = 0;
+        } else {
+            distance_heuristic.heuristic_values[node] = amp::distance(point, problem.q_goal);
+        }
     }
+    // for(auto node : graphPtr->nodes()) {
+    //     distance_heuristic.heuristic_values[node] = amp::distance(nodes[node], problem.q_goal);
+    // }
 
     // Run A* to find the shortest path
     MyAStarAlgo astar;
     MyAStarAlgo::GraphSearchResult astar_result = astar.search(graph_problem, distance_heuristic);
 
+    // Set the success variable
+    success = astar_result.success;
+
     // Create the path from the astar result
     amp::Path2D path;
-    for(auto node : astar_result.node_path) {
-        path.waypoints.push_back(nodes[node]);
+    if(success) {
+        for(auto node : astar_result.node_path) {
+            path.waypoints.push_back(nodes[node]);
+        }
+    } else {
+        // Just add the initial point and the goal
+        path.waypoints.push_back(problem.q_init);
+        path.waypoints.push_back(problem.q_goal);
     }
 
     return path;
@@ -40,7 +57,8 @@ void MyPRM::createGraph(const amp::Problem2D& problem) {
     // Sample n configurations
     for(int i = 0; i < n; i++) {
         // Sample a random point in the environment
-        Eigen::Vector2d q_rand = amp::randomConfiguration(problem);
+        Eigen::Vector2d q_rand = amp::randomConfiguration(problem.x_min, problem.x_max, problem.y_min, problem.y_max);
+        //Eigen::Vector2d q_rand = amp::randomConfiguration(-1.0, 11.0, -3.0, 3.0);
 
         // Check if the sampled point is valid
         if(!inCollision_point(problem, q_rand)) {
@@ -91,12 +109,14 @@ amp::Path2D MyRRT::plan(const amp::Problem2D& problem) {
 
         // Reverse the path
         std::reverse(path.waypoints.begin(), path.waypoints.end());
+
+        // Set the success variable
+        success = true;
     } else {
         // Just return the init and goal locations
         path.waypoints.push_back(problem.q_init);
         path.waypoints.push_back(problem.q_goal);
     }
-
 
     return path;
 }
@@ -121,7 +141,7 @@ void MyRRT::createGraph(const amp::Problem2D& problem) {
             q_rand = problem.q_goal;
         } else {
             // Sample a random point in the environment
-            q_rand = amp::randomConfiguration(problem);
+            q_rand = amp::randomConfiguration(problem.x_min, problem.x_max, problem.y_min, problem.y_max);
         }
 
         // Check if the sampled point is valid

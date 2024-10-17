@@ -18,14 +18,15 @@
 class MyPRM : public amp::PRM2D {
     public:
         // Default constructor
-        MyPRM() : n(400), r(3) {}
+        MyPRM() : n(400), r(2), success(false) {}
 
         // constructor to populate n and r
-        MyPRM(int n, double r) : n(n), r(r) {}
+        MyPRM(int n, double r) : n(n), r(r), success(false) {}
 
         // getter functions
         std::map<amp::Node, Eigen::Vector2d> getNodes() { return nodes; }
         std::shared_ptr<amp::Graph<double>> getGraph() { return graphPtr; }
+        bool getSuccess() { return success; }
 
         // @brief Find path using PRM
         virtual amp::Path2D plan(const amp::Problem2D& problem) override; 
@@ -41,20 +42,24 @@ class MyPRM : public amp::PRM2D {
         // Graph, node map
         std::shared_ptr<amp::Graph<double>> graphPtr;
         std::map<amp::Node, Eigen::Vector2d> nodes;
+
+        // Success variable
+        bool success;
 };
 
 
 class MyRRT : public amp::GoalBiasRRT2D {
     public:
         // Default constructor
-        MyRRT() : step_size(0.5), goal_bias(0.05), max_iterations(5000), epsilon(0.25) {}
+        MyRRT() : step_size(0.5), goal_bias(0.05), max_iterations(5000), epsilon(0.25), success(false) {}
 
         // constructor to populate step_size, goal_bias, max_iterations, and epsilon
-        MyRRT(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e) {}
+        MyRRT(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e), success(false) {}
 
         // getter functions
         std::map<amp::Node, Eigen::Vector2d> getNodes() { return nodes; }
         std::shared_ptr<amp::Graph<double>> getGraph() { return graphPtr; }
+        bool getSuccess() { return success; }
 
         // @brief Find path using RRT
         virtual amp::Path2D plan(const amp::Problem2D& problem) override; 
@@ -76,6 +81,9 @@ class MyRRT : public amp::GoalBiasRRT2D {
         std::shared_ptr<amp::Graph<double>> graphPtr;
         std::map<amp::Node, Eigen::Vector2d> nodes;
         std::map<amp::Node, amp::Node> parents;
+
+        // Success variable
+        bool success;
 };
 
 
@@ -83,7 +91,15 @@ struct LookupSearchHeuristic : public amp::SearchHeuristic {
 	/// @brief Get the heuristic value stored in `heuristic_values`. 
 	/// @param node Node to get the heuristic value h(node) for. 
 	/// @return Heuristic value
-	virtual double operator()(amp::Node node) const override {return heuristic_values.at(node);}
+	virtual double operator()(amp::Node node) const override {
+        // Check if the node is in the map
+        if(heuristic_values.find(node) == heuristic_values.end()) {
+            std::cout << "Node not found in heuristic map" << std::endl;
+            return 0;
+        } else {
+            return heuristic_values.at(node);
+        }
+    }
 
     /// @brief Store the heursitic values for each node in a map
     std::map<amp::Node, double> heuristic_values; 

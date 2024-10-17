@@ -206,14 +206,14 @@ namespace amp {
     }
 
     // @brief Generate a random configuration in the workspace
-    Eigen::Vector2d randomConfiguration(const amp::Environment2D& env) {
+    Eigen::Vector2d randomConfiguration(double x_min, double x_max, double y_min, double y_max) {
         // Create a random number generator
         std::random_device rd;  // Random seed
         std::mt19937 gen(rd()); // Mersenne Twister generator
 
         // Define the uniform distribution between -5 and 5
-        std::uniform_real_distribution<double> x_rand(env.x_min, env.x_max);
-        std::uniform_real_distribution<double> y_rand(env.y_min, env.y_max);
+        std::uniform_real_distribution<double> x_rand(x_min, x_max);
+        std::uniform_real_distribution<double> y_rand(y_min, y_max);
 
         // Sample a random point in the environment
         Eigen::Vector2d q_rand(x_rand(gen), y_rand(gen));

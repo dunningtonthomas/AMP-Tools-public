@@ -41,7 +41,7 @@ namespace amp{
     bool inCollision_point(const amp::Environment2D& env, Eigen::Vector2d point);
 
     // @brief generate a Eigen::Vector2d configuration in the workspace
-    Eigen::Vector2d randomConfiguration(const amp::Environment2D& env);
+    Eigen::Vector2d randomConfiguration(double x_min, double x_max, double y_min, double y_max);
 
     // @brief generate a random double between min and max
     double randomDouble(double min, double max);
