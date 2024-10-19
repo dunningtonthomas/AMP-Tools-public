@@ -9,21 +9,22 @@ using namespace amp;
 
 int main(int argc, char** argv) {
     //HW7::hint(); // Consider implementing an N-dimensional planner 
-    bool benchmark_bool = true;
+    bool benchmark_bool = false;
+    bool benchmark_rrt = false;
     bool hw5_bool = false;
 
     // Get the problem
     //Problem2D problem = HW2::getWorkspace1();
-    Problem2D problem = HW2::getWorkspace2();
-    //Problem2D problem = HW5::getWorkspace1();
+    //Problem2D problem = HW2::getWorkspace2();
+    Problem2D problem = HW5::getWorkspace1();
 
     // Test PRM on Workspace1 of HW2
-    MyPRM prm(200, 2);
+    MyPRM prm(700, 4);
     Path2D prm_path = prm.plan(problem);
     std::map<amp::Node, Eigen::Vector2d> prm_nodes = prm.getNodes();
     std::shared_ptr<amp::Graph<double>> prm_graph = prm.getGraph();
-    Visualizer::makeFigure(problem, prm_path, *prm_graph, prm_nodes);
-    std::cout << "PRM Path Length: " << prm_path.length() << std::endl; 
+    //Visualizer::makeFigure(problem, prm_path, *prm_graph, prm_nodes);
+    //std::cout << "PRM Path Length: " << prm_path.length() << std::endl; 
 
     // Generate a random problem and test RRT
     //HW7::generateAndCheck(rrt, path, problem);
@@ -31,9 +32,10 @@ int main(int argc, char** argv) {
     Path2D path = rrt.plan(problem);
     std::map<amp::Node, Eigen::Vector2d> rrt_nodes = rrt.getNodes();
     std::shared_ptr<amp::Graph<double>> rrt_graph = rrt.getGraph();
-    //Visualizer::makeFigure(problem, path, *rrt_graph, rrt_nodes);
+    Visualizer::makeFigure(problem, path, *rrt_graph, rrt_nodes);
+    std::cout << "RRT Path Length: " << path.length() << std::endl;
 
-    // Benchmarking
+    // Benchmarking PRM
     if(benchmark_bool) {
         std::vector<std::pair<double, double>> prm_bench_values_1 = {{200, 0.5}, {200, 1}, {200, 1.5}, {200, 2}, {500, 0.5}, {500, 1}, {500, 1.5}, {500, 2}};
         std::vector<std::pair<double, double>> prm_bench_values_2 = {{200, 1}, {200, 2}, {500, 1}, {500, 2}, {1000, 1}, {1000, 2}};
@@ -44,16 +46,12 @@ int main(int argc, char** argv) {
 
         // Vaiues for if hw5 or hw2
         std::vector<std::pair<double, double>> prm_bench_values;
-        if(hw5_bool) {
-            prm_bench_values = prm_bench_values_1;
-        } else {
-            prm_bench_values = prm_bench_values_2;
-        }
-
         std::vector<std::string> labels;
         if(hw5_bool) {
+            prm_bench_values = prm_bench_values_1;
             labels = labels_1;
         } else {
+            prm_bench_values = prm_bench_values_2;
             labels = labels_2;
         }
         
@@ -95,13 +93,64 @@ int main(int argc, char** argv) {
         }
 
         // Box Plots
-        Visualizer::makeBoxPlot(path_lengths, labels, "Path Lengths", "PRM Configuration", "Path Length");
-        Visualizer::makeBoxPlot(path_times, labels, "Computation Time", "PRM Configuration", "Time (ms)");
-        Visualizer::makeBarGraph(success_rates, labels, "Success Rates", "PRM Configuration", "Success Rate (%)");
-    } // end benchmarking
+        //Visualizer::makeBoxPlot(path_lengths, labels, "Path Lengths", "PRM Configuration", "Path Length");
+        //Visualizer::makeBoxPlot(path_times, labels, "Computation Time", "PRM Configuration", "Time (ms)");
+        //Visualizer::makeBarGraph(success_rates, labels, "Success Rates", "PRM Configuration", "Success Rate (%)");
+    } // end prm benchmarking
+
+    // Benchmarking RRT
+    if(benchmark_rrt) {
+        std::list<std::vector<double>> path_lengths, path_times;
+        std::vector<double> success_rates;
+
+        // Vector of problems
+        std::vector<Problem2D> problems = {HW5::getWorkspace1(), HW2::getWorkspace1(), HW2::getWorkspace2()};
+
+        // Create labels
+        std::vector<std::string> labels = {"HW5 Workspace1", "HW2 Workspace1", "HW2 Workspace2"};
+
+        // Run each case 100 times
+        std::cout << "Benchmarking RRT..." << std::endl;
+        for(const auto& problem : problems) {
+            std::vector<double> path_length, path_time, success_rate;
+            std::cout << "Running RRT for problem " << std::endl;
+            for(int i = 0; i < 100; i++) {
+                // Make object
+                MyRRT rrt_bench;
+
+                // Time the time it takes
+                auto start = std::chrono::high_resolution_clock::now();
+                Path2D path = rrt_bench.plan(problem);
+                auto end = std::chrono::high_resolution_clock::now();
+
+                // Calculate the time it took
+                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+                double elapsed_seconds = elapsed.count();
+
+                // Add path length if there is a valid path
+                if(rrt_bench.getSuccess()) {
+                    path_length.push_back(path.length());
+                    success_rate.push_back(1);
+                } else {
+                    success_rate.push_back(0);
+                }
+
+                // Add time and success rate
+                path_time.push_back(elapsed_seconds);
+            }
+            // Add vectors to the lists
+            path_lengths.push_back(path_length);
+            path_times.push_back(path_time);
+            success_rates.push_back(std::accumulate(success_rate.begin(), success_rate.end(), 0));
+        }
+        // Box Plots
+        //Visualizer::makeBoxPlot(path_lengths, labels, "Path Lengths", "Workspace", "Path Length");
+        //Visualizer::makeBoxPlot(path_times, labels, "Computation Time", "Workspace", "Time (ms)");
+        //Visualizer::makeBarGraph(success_rates, labels, "Success Rates", "Workspace", "Success Rate (%)");
+    }
 
     // Grade method
-    Visualizer::showFigures();
-    //HW7::grade<MyPRM, MyRRT>("firstName.lastName@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
+    //Visualizer::showFigures();
+    HW7::grade<MyPRM, MyRRT>("thomas.dunnington@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
     return 0;
 }

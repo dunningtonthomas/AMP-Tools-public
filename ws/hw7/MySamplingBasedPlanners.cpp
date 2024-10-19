@@ -44,6 +44,11 @@ amp::Path2D MyPRM::plan(const amp::Problem2D& problem) {
         path.waypoints.push_back(problem.q_goal);
     }
 
+
+    // Path smoothing
+    //pathSmoothing(path, problem);
+
+
     return path;
 }
 
@@ -89,6 +94,29 @@ void MyPRM::createGraph(const amp::Problem2D& problem) {
         graphPtr->connect(from, to, weight);
     }
 }
+
+
+// @brief Implement path smoothing by removing unnecessary waypoints
+void MyPRM::pathSmoothing(amp::Path2D& path, const amp::Problem2D& problem) {
+    // Smooth 100 times
+    for(int i = 0; i < 100; i++) {
+        // return if the path is too short
+        if(path.waypoints.size() < 3) {
+            return;
+        }
+
+        // Iterate through the path and remove unnecessary waypoints
+        for(int i = 0; i < path.waypoints.size() - 2; i++) {
+            // Check if the path is valid
+            if(!inCollision(problem, path.waypoints[i], path.waypoints[i + 2])) {
+                // Remove the middle waypoint
+                path.waypoints.erase(path.waypoints.begin() + i + 1);
+            }
+        }
+    }
+}
+
+
 
 
 // Implement your RRT algorithm here

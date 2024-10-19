@@ -18,7 +18,7 @@
 class MyPRM : public amp::PRM2D {
     public:
         // Default constructor
-        MyPRM() : n(400), r(2), success(false) {}
+        MyPRM() : n(1000), r(2), success(false) {}
 
         // constructor to populate n and r
         MyPRM(int n, double r) : n(n), r(r), success(false) {}
@@ -33,6 +33,9 @@ class MyPRM : public amp::PRM2D {
 
         // @brief Create PRM Graph return the graph and the nodes map by reference
         void createGraph(const amp::Problem2D& problem);
+
+        // @brief implement path smoothing by removing unnecessary waypoints
+        void pathSmoothing(amp::Path2D& path, const amp::Problem2D& problem);
 
     private:
         // PRM Hyperparameters
