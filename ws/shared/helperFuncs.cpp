@@ -249,5 +249,46 @@ namespace amp {
     double distance(Eigen::Vector2d p1, Eigen::Vector2d p2) {
         return (p1 - p2).norm();
     }
+
+    // @brief Calculate the minimum distance from a point to an obstacle
+    double distanceToObstacle(const Eigen::Vector2d& q, const amp::Obstacle2D& obstacle, Eigen::Vector2d& closest_point) {
+        // Find the minimum distance to an obstacle edge
+        double min_distance = std::numeric_limits<double>::max();
+        double distance;
+        std::vector<Eigen::Vector2d> vertices = obstacle.verticesCCW();
+
+        // Loop through all vertices of the obstacle
+        for(int i = 0; i < vertices.size(); i++) {
+            Eigen::Vector2d A = vertices[i];
+            Eigen::Vector2d B = vertices[(i+1) % vertices.size()];
+
+            // Calculate distance to the line segment
+            distance = minDistanceToLine(A, B, q, closest_point);
+            if(distance < min_distance) {
+                min_distance = distance;
+            }
+        }
+        return min_distance;
+    }
+
+    // @brief find minimum distance from a point to a line, Got this function from Geeks4Geeks
+    double minDistanceToLine(const Eigen::Vector2d A, const Eigen::Vector2d B, const Eigen::Vector2d P, Eigen::Vector2d& closest_point) {
+        // vector AB and AP
+        Eigen::Vector2d AB(B - A);
+        Eigen::Vector2d AP(P - A);
+
+        // Project AP onto AB
+        double projection = AP.dot(AB) / (AB.dot(AB));
+
+        // Clamp the projection to between 0 and 1
+        projection = std::max(0.0, std::min(1.0, projection));
+
+        // Calculate the closest point
+        closest_point = A + projection * AB;
+
+        // Return the distance
+        return (P - closest_point).norm();
+    }
+
 } // namespace amp
 

@@ -48,6 +48,11 @@ namespace amp{
 
     // @brief Calculate the distance between two points
     double distance(Eigen::Vector2d p1, Eigen::Vector2d p2);
+
+    // @brief Calculate the minimum distance from a point to an obstacle
+    double distanceToObstacle(const Eigen::Vector2d& q, const amp::Obstacle2D& obstacle, Eigen::Vector2d& closest_point);
+    double minDistanceToLine(const Eigen::Vector2d A, const Eigen::Vector2d B, const Eigen::Vector2d P, Eigen::Vector2d& closest_point);
+    
 } // namespace amp
 
 
