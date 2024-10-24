@@ -17,7 +17,7 @@
 class MyCentralPlanner : public amp::CentralizedMultiAgentRRT {
     public:
         // Constructors
-        MyCentralPlanner() : step_size(0.5), goal_bias(0.05), max_iterations(7500), epsilon(0.25), success(false) {}
+        MyCentralPlanner() : step_size(0.5), goal_bias(0.05), max_iterations(75000), epsilon(0.25), success(false) {}
         MyCentralPlanner(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e), success(false) {}
 
         // @breif Use centralized planning with RRT to solve the multi-agent problem

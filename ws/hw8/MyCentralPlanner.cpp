@@ -1,13 +1,7 @@
 #include "MyMultiAgentPlanners.h"
 
 amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& problem) {
-    amp::MultiAgentPath2D path;
-    // for (const amp::CircularAgentProperties& agent : problem.agent_properties) {
-    //     amp::Path2D agent_path;
-    //     agent_path.waypoints = {agent.q_init, agent.q_goal};
-    //     path.agent_paths.push_back(agent_path);
-    // }
-
+    
     // Steps for centralized multi agent RRT planning
     // 1) Create tree rooted at qi which is the configuration of all agents at the beginning (x1_i, y1_i, x2_i, y2_i, ..., xn_i, yn_i)
     // 2) Generate random configuration
@@ -20,6 +14,9 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
     // 7) If the path is valid, add q_new which is a step size in the direction of q_rand from q_near
     // 8) Check if q_new is close enough to the goal for all agents, within epsilon, check for all configuration in the q vector
     // 9) If q_new is close enough, back track all the agents' parent nodes to get the path for every agent
+
+    // Overall path for all agents
+    amp::MultiAgentPath2D path;
 
     // Create initial configuration vector which is (x1_i, y1_i, x2_i, y2_i, ..., xn_i, yn_i) for all agents
     Eigen::VectorXd q_init(problem.numAgents() * 2);
@@ -57,8 +54,23 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
 
         // Check if the subpath is collision free
         if(isSubpathCollisionFree(problem, q_near, q_rand)) {
-            // Extend tree to the new node
+            // Extend tree to the new node 
+            // Eigen::VectorXd q_new_big = q_rand - q_near;
+            // Eigen::VectorXd q_new(q_new_big.size());
+            // for(int k = 0; k < q_new_big.size(); k+=2) {
+            //     // Normalize each agent's step size
+            //     Eigen::Vector2d q_new_big_agent(q_new_big(k), q_new_big(k+1));
+            //     Eigen::Vector2d q_near_agent(q_near(k), q_near(k+1));
+            //     Eigen::Vector2d q_new_agent = q_near_agent + step_size * q_new_big_agent.normalized();
+
+            //     // Add to the new configuration
+            //     q_new(k) = q_new_agent.x();
+            //     q_new(k+1) = q_new_agent.y();
+            // }
+
             Eigen::VectorXd q_new = q_near + step_size * (q_rand - q_near).normalized();
+
+
             amp::Node add_node = nodes.size();
             nodes[add_node] = q_new;
 
@@ -76,8 +88,7 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
 
                 // Recreate the path from the parents map
                 amp::Node final_node = nodes.size() - 1;
-                int i = 0;
-                for(const amp::CircularAgentProperties& agent : problem.agent_properties) {
+                for(int i = 0; i < problem.numAgents() * 2; i+=2) {
                     // Create the path for each agent
                     amp::Path2D agent_path;
 
@@ -98,8 +109,6 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
 
                     // Add to the overall multi agent path
                     path.agent_paths.push_back(agent_path);
-
-                    i+=2;
                 }
                 // Set the success variable
                 success = true;
@@ -107,6 +116,17 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
             }
         }
         iteration++;
+        std::cout << "Iteration: " << iteration << std::endl;
+    }
+
+    // If the path is not found, return the initial path
+    if(!success) {
+        std::cout << "RRT Path not found in " << iteration << " iterations, returning initial path" << std::endl;
+        for(const amp::CircularAgentProperties& agent : problem.agent_properties) {
+            amp::Path2D agent_path;
+            agent_path.waypoints = {agent.q_init, agent.q_goal};
+            path.agent_paths.push_back(agent_path);
+        }
     }
     return path;
 }
@@ -122,11 +142,9 @@ Eigen::VectorXd MyCentralPlanner::randomConfiguration(const amp::MultiAgentProbl
 
     // Sample a random configuration in the environment
     Eigen::VectorXd q_rand(problem.numAgents() * 2);
-    int i = 0;
-    for (const amp::CircularAgentProperties& agent : problem.agent_properties) {
+    for(int i = 0; i < problem.numAgents() * 2; i+=2) {
         q_rand(i) = x_rand(gen);
         q_rand(i+1) = y_rand(gen);
-        i += 2;
     }
     return q_rand;
 }
@@ -156,7 +174,7 @@ double MyCentralPlanner::configurationDistance(const Eigen::VectorXd& q1, const 
 // @brief check if the subpath between two nodes is collision free
 bool MyCentralPlanner::isSubpathCollisionFree(const amp::MultiAgentProblem2D& problem, const Eigen::VectorXd& q_near, const Eigen::VectorXd& q_rand) {
     // Discretize the path between q_near and q_rand and check for collision
-    int num_steps = 10;
+    int num_steps = 100;
     for (int i = 0; i < num_steps; i++) {
         // Calculate the step size
         Eigen::VectorXd q_new = q_near + (q_rand - q_near) * i * (1.0 / num_steps);
