@@ -23,18 +23,18 @@ int main(int argc, char** argv) {
     // Run timer example (useful for benchmarking)
     //timer_example();
     bool benchmark_central = false;
-    bool benchmark_decentral = true;
+    bool benchmark_decentral = false;
 
     // Initialize Workspace 1 with 3 agents
     amp::RNG::seed(amp::RNG::randiUnbounded());
-    MultiAgentProblem2D problem = HW8::getWorkspace1(5);
+    MultiAgentProblem2D problem = HW8::getWorkspace1(2);
     std::vector<std::vector<Eigen::Vector2d>> collision_states;
 
     // Solve using a centralized approach
-    MyCentralPlanner central_planner;
-    MultiAgentPath2D path = central_planner.plan(problem);
-    bool isValid = HW8::check(path, problem, collision_states);
-    Visualizer::makeFigure(problem, path, collision_states);
+    // MyCentralPlanner central_planner;
+    // MultiAgentPath2D path = central_planner.plan(problem);
+    // bool isValid = HW8::check(path, problem, collision_states);
+    // Visualizer::makeFigure(problem, path, collision_states);
 
     // Solve using a decentralized approach
     // MyDecentralPlanner decentral_planner;
@@ -69,8 +69,8 @@ int main(int argc, char** argv) {
         path_times.push_back(path_time);
 
         std::vector<std::string> labels = {"100"};
-        Visualizer::makeBoxPlot(path_times, labels, "4 Agents Time", "Number of runs", "Computation Time (ms)");
-        Visualizer::makeBoxPlot(tree_sizes, labels, "4 Agents Tree Size", "Number of runs", "Tree Size (#nodes)");
+        Visualizer::makeBoxPlot(path_times, labels, "5 Agents Time", "Number of runs", "Computation Time (ms)");
+        Visualizer::makeBoxPlot(tree_sizes, labels, "5 Agents Tree Size", "Number of runs", "Tree Size (#nodes)");
     }
 
     // Benchmarking decentral
@@ -108,6 +108,6 @@ int main(int argc, char** argv) {
 
     // Visualize and grade methods
     Visualizer::showFigures();
-    //HW8::grade<MyCentralPlanner, MyDecentralPlanner>("firstName.lastName@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
+    HW8::grade<MyCentralPlanner, MyDecentralPlanner>("thomas.dunnington@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
     return 0;
 }

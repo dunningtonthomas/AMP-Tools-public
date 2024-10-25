@@ -20,8 +20,12 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
     // 8) Check if q_new is close enough to the goal for all agents, within epsilon, check for all configuration in the q vector
     // 9) If q_new is close enough, back track all the agents' parent nodes to get the path for every agent
 
-    // Overall path for all agents
+    // Set all agents to not in the goal
+    in_goal = std::vector<bool>(problem.numAgents(), false);
+
+    // Overall path for all agents, preallocate size
     amp::MultiAgentPath2D path;
+    //path.agent_paths = std::vector<amp::Path2D>(problem.numAgents());
 
     // Create initial and goal configuration vectors which is (x1_i, y1_i, ..., xn_i, yn_i) for all agents
     Eigen::VectorXd q_init(problem.numAgents() * 2);
@@ -60,19 +64,6 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
         // Check if the subpath is collision free
         if(isSubpathCollisionFree(problem, q_near, q_rand)) {
             // Extend tree to the new node 
-            // Eigen::VectorXd q_new_big = q_rand - q_near;
-            // Eigen::VectorXd q_new(q_new_big.size());
-            // for(int k = 0; k < q_new_big.size(); k+=2) {
-            //     // Normalize each agent's step size
-            //     Eigen::Vector2d q_new_big_agent(q_new_big(k), q_new_big(k+1));
-            //     Eigen::Vector2d q_near_agent(q_near(k), q_near(k+1));
-            //     Eigen::Vector2d q_new_agent = q_near_agent + step_size * q_new_big_agent.normalized();
-
-            //     // Add to the new configuration
-            //     q_new(k) = q_new_agent.x();
-            //     q_new(k+1) = q_new_agent.y();
-            // }
-
             Eigen::VectorXd q_new(q_rand.size());
             for(int k = 0; k < q_rand.size(); k+=2) {
                 Eigen::Vector2d q_change(q_rand(k) - q_near(k), q_rand(k+1) - q_near(k+1));
@@ -89,6 +80,21 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
                     q_new(k+1) = q_near(k+1);
                 }
             }
+            // for(int k = 0; k < q_rand.size(); k+=2) {
+            //     Eigen::Vector2d q_change(q_rand(k) - q_near(k), q_rand(k+1) - q_near(k+1));
+            //     q_change = q_change.normalized();
+
+            //     // Only extend the parts that are not in the goal
+            //     Eigen::Vector2d q_near_agent(q_near(k), q_near(k+1));
+            //     Eigen::Vector2d q_goal_agent(q_goal(k), q_goal(k+1));
+            //     if(!in_goal[k/2]) {
+            //         q_new(k) = q_near(k) + step_size * q_change.x();
+            //         q_new(k+1) = q_near(k+1) + step_size * q_change.y();
+            //     } else {
+            //         q_new(k) = q_goal(k);
+            //         q_new(k+1) = q_goal(k+1);
+            //     }
+            // }
 
             //Eigen::VectorXd q_new = q_near + step_size * (q_rand - q_near).normalized();
 
@@ -539,3 +545,97 @@ bool MyDecentralPlanner::agentCollision(const Eigen::Vector2d& agent_position, d
     }
     return false;
 }
+
+
+
+
+
+
+
+
+/* ATTEMPT AT PRUNING THE TREE
+            // If any of the agents are in the goal, prune the tree
+            for(int i = 0; i < problem.numAgents() * 2; i+=2) {
+                Eigen::Vector2d agent_position(q_new(i), q_new(i+1));
+                Eigen::Vector2d agent_goal(q_goal(i), q_goal(i+1));
+                Eigen::Vector2d agent_init(q_init(i), q_init(i+1));
+                if(isSystemInGoal(agent_position, agent_goal) && !in_goal[i/2]) {
+                    // Agent i/2 is in the goal
+                    in_goal[i/2] = true;
+                    std::cout << "Pruning the tree for agent " << i/2 << std::endl;
+
+                    // Create the path for the agent that is now in the goal
+                    amp::Path2D agent_path;
+
+                    // Prune the tree
+                    std::vector<amp::Node> nodes_to_keep;
+                    amp::Node curr_node = add_node;
+                    while(nodes[curr_node] != q_init) {
+                        // Keep track of nodes to keep
+                        nodes_to_keep.push_back(curr_node);
+
+                        // Get the current agents configuration
+                        Eigen::Vector2d agent_position(nodes[curr_node](i), nodes[curr_node](i+1));
+                        agent_path.waypoints.push_back(agent_position);
+
+                        // Go to the next node in the parents map
+                        curr_node = parents[curr_node];
+
+                        // Output current node
+                        //std::cout << "Current node: " << curr_node << std::endl;
+                    }
+
+                    // Add the initial configuration
+                    agent_path.waypoints.push_back(agent_init);
+
+                    // Reverse the path
+                    std::reverse(agent_path.waypoints.begin(), agent_path.waypoints.end());
+
+                    // Add the goal
+                    agent_path.waypoints.push_back(agent_goal);
+
+                    // Add to the overall multi agent path
+                    path.agent_paths[i/2] = agent_path;
+
+                    /*
+                    // Iterate over the map and remove nodes not in the set
+                    std::set<amp::Node> nodes_to_keep_set(nodes_to_keep.begin(), nodes_to_keep.end());
+                    for (auto it = nodes.begin(); it != nodes.end(); ) {
+                        if (nodes_to_keep_set.find(it->first) == nodes_to_keep_set.end()) {
+                            it = nodes.erase(it); // Erase returns the next iterator
+                        } else {
+                            ++it; // Move to the next element
+                        }
+                    }
+
+                    // Iterate over parents map and get rid of the nodes not in the set
+                    for (auto it = parents.begin(); it != parents.end(); ) {
+                        if (nodes_to_keep_set.find(it->first) == nodes_to_keep_set.end()) {
+                            it = parents.erase(it); // Erase returns the next iterator
+                        } else {
+                            ++it; // Move to the next element
+                        }
+                    }
+
+                    // Add initial node back
+                    nodes[init_node] = q_init;
+
+                    break;
+                }
+            }
+
+            // Check if all agents are in the goal
+            success = true;
+            for(const auto& agent_in_goal : in_goal) {
+                if(!agent_in_goal) {
+                    success = false;
+                    break;
+                }
+            }
+
+            // If all agents are in the goal, break out
+            if(success) {
+                std::cout << "RRT Path found in "<< iteration << " iterations, reconstructing path..." << std::endl;
+                break;
+            }
+*/

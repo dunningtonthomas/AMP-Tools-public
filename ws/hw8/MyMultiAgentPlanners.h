@@ -59,9 +59,15 @@ class MyCentralPlanner : public amp::CentralizedMultiAgentRRT {
         int max_iterations;
         double epsilon;
 
-        // Node map, parent map
+        // Node map, parent map, in goal vector
         std::map<amp::Node, Eigen::VectorXd> nodes;
         std::map<amp::Node, amp::Node> parents;
+        std::map<amp::Node, Eigen::VectorXd> pruned_nodes;
+        std::map<amp::Node, amp::Node> pruned_parents;
+        std::map<amp::Node, Eigen::VectorXd> temp_nodes;
+        std::map<amp::Node, amp::Node> temp_parents;
+        std::vector<bool> in_goal;
+        amp::MultiAgentPath2D current_path_state;
 
         // Success variable
         bool success;
