@@ -138,7 +138,7 @@ amp::MultiAgentPath2D MyCentralPlanner::plan(const amp::MultiAgentProblem2D& pro
             }
         }
         iteration++;
-        std::cout << "Iteration: " << iteration << std::endl;
+        //std::cout << "Iteration: " << iteration << std::endl;
     }
 
     // If the path is not found, return the initial path
@@ -285,7 +285,7 @@ bool MyCentralPlanner::isSystemInGoal(const Eigen::VectorXd& q, const Eigen::Vec
 bool MyCentralPlanner::obstacleCollision(const amp::Obstacle2D& obstacle, const Eigen::Vector2d& agent_position, double agent_radius) {
     // Check if the point is inside the obstacle or if the disk intersects with the obstacle
     Eigen::Vector2d closest_point;
-    if(isInsidePolygon(obstacle, agent_position) || distanceToObstacle(agent_position, obstacle, closest_point) < agent_radius) {
+    if(isInsidePolygon(obstacle, agent_position) || distanceToObstacle(agent_position, obstacle, closest_point) <= agent_radius) {
         return true;
     }
     return false;
@@ -295,7 +295,7 @@ bool MyCentralPlanner::obstacleCollision(const amp::Obstacle2D& obstacle, const 
 // @brief check if the disk robot is in collision with another agent
 bool MyCentralPlanner::agentCollision(const Eigen::Vector2d& agent_position, double agent_radius, const Eigen::Vector2d& other_agent_position, double other_agent_radius) {
     // Check if the agent is in collision with the other agent
-    if ((agent_position - other_agent_position).norm() < agent_radius + other_agent_radius) {
+    if ((agent_position - other_agent_position).norm() <= agent_radius + other_agent_radius) {
         return true;
     }
     return false;
@@ -407,7 +407,9 @@ amp::MultiAgentPath2D MyDecentralPlanner::plan(const amp::MultiAgentProblem2D& p
         std::cout << "RRT Path not found for all agents..." << std::endl;
     }
 
-    return current_path_state;
+    amp::MultiAgentPath2D current_path_state_copy = current_path_state;
+    current_path_state = amp::MultiAgentPath2D();
+    return current_path_state_copy;
 }
 
 
@@ -445,11 +447,18 @@ amp::Node MyDecentralPlanner::nearestNeighbor(const Eigen::VectorXd& q_rand) {
 
 // @brief check if the subpath between two nodes is collision free
 bool MyDecentralPlanner::isSubpathCollisionFree(const amp::MultiAgentProblem2D& problem, const Eigen::VectorXd& q_near, const Eigen::VectorXd& q_rand, int q_rand_index) {
+    // Check if the sampled point is less than a step size away from the goal
+    Eigen::VectorXd q_rand_final = q_rand;
+    if(configurationDistance(q_near, q_rand) < step_size) {
+        // Set q_rand to a step size away from q_near
+        q_rand_final = q_near + (q_rand - q_near).normalized() * step_size;
+    }
+    
     // Discretize the path between q_near and q_rand and check for collision
-    int num_steps = 50;
+    int num_steps = 100;
     for (int i = 0; i < num_steps; i++) {
         // Calculate the step size
-        Eigen::VectorXd q_new = q_near + (q_rand - q_near) * i * (1.0 / num_steps);
+        Eigen::VectorXd q_new = q_near + (q_rand_final - q_near) * i * (1.0 / num_steps);
 
         // Check if the path is valid
         if (!isSystemValid(problem, q_new, q_rand_index)) {
@@ -481,11 +490,31 @@ bool MyDecentralPlanner::isSystemValid(const amp::MultiAgentProblem2D& problem, 
             continue;
         }
 
-        // Check if the agent is in collision with the other agent
-        Eigen::Vector2d other_agent_position = other_agent_path.waypoints[q_rand_index];
-        if (agentCollision(agent_position, agent.radius, other_agent_position, agent.radius)) {
-            return false;
+        // Check if the agent is in collision with the other agent, add buffer
+        int buffer_size = 1;
+        std::vector<Eigen::Vector2d> other_agent_positions;
+        if(q_rand_index > buffer_size) {
+            for(int i = 0; i < buffer_size; i++) {
+                other_agent_positions.push_back(other_agent_path.waypoints[q_rand_index - i]);
+            }
         }
+        if(q_rand_index < other_agent_path.waypoints.size() - buffer_size) {
+            for(int i = 0; i < buffer_size; i++) {
+                other_agent_positions.push_back(other_agent_path.waypoints[q_rand_index + i]);
+            }
+        }
+
+        // Check if the agent is in collision with any of the other agents at a given time
+        for(const auto& other_agent_position : other_agent_positions) {
+            if (agentCollision(agent_position, agent.radius, other_agent_position, agent.radius)) {
+                return false;
+            }
+        }
+
+        // Eigen::Vector2d other_agent_position = other_agent_path.waypoints[q_rand_index];
+        // if (agentCollision(agent_position, agent.radius, other_agent_position, agent.radius)) {
+        //     return false;
+        // }
     }
     return true;
 }
@@ -505,7 +534,7 @@ bool MyDecentralPlanner::obstacleCollision(const amp::Obstacle2D& obstacle, cons
 // @brief check if the disk robot is in collision with another agent
 bool MyDecentralPlanner::agentCollision(const Eigen::Vector2d& agent_position, double agent_radius, const Eigen::Vector2d& other_agent_position, double other_agent_radius) {
     // Check if the agent is in collision with the other agent
-    if ((agent_position - other_agent_position).norm() < agent_radius + other_agent_radius) {
+    if ((agent_position - other_agent_position).norm() <= (agent_radius + other_agent_radius + epsilon)) {
         return true;
     }
     return false;

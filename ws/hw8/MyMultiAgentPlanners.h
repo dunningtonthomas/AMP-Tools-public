@@ -17,8 +17,11 @@
 class MyCentralPlanner : public amp::CentralizedMultiAgentRRT {
     public:
         // Constructors
-        MyCentralPlanner() : step_size(0.5), goal_bias(0.05), max_iterations(150000), epsilon(0.25), success(false) {}
+        MyCentralPlanner() : step_size(0.5), goal_bias(0.05), max_iterations(250000), epsilon(0.25), success(false) {}
         MyCentralPlanner(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e), success(false) {}
+
+        // @brief getter function for the size of the tree
+        int getTreeSize() { return nodes.size(); }
 
         // @breif Use centralized planning with RRT to solve the multi-agent problem
         virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override; 
@@ -68,7 +71,7 @@ class MyCentralPlanner : public amp::CentralizedMultiAgentRRT {
 class MyDecentralPlanner : public amp::DecentralizedMultiAgentRRT {
     public:
         // Constructors
-        MyDecentralPlanner() : step_size(0.5), goal_bias(0.05), max_iterations(7500), epsilon(0.25), success(false), overall_success(true) {}
+        MyDecentralPlanner() : step_size(0.5), goal_bias(0.05), max_iterations(75000), epsilon(0.25), success(false), overall_success(true) {}
         MyDecentralPlanner(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e), success(false), overall_success(true) {}
 
         virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
