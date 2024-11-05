@@ -6,6 +6,7 @@
 #include "tools/Path.h" 
 #include "tools/Obstacle.h" 
 #include "tools/LinkManipulator.h" 
+#include "tools/DynamicAgent.h"
 #include "tools/Graph.h" 
 #include "tools/AgentTypes.h" 
 
@@ -59,6 +60,16 @@ class LinkManipulatorMotionPlanner2D {
         virtual amp::ManipulatorTrajectory2Link plan(const AgentType& link_manipulator_agent, const amp::Problem2D& problem) = 0;
 
         virtual ~LinkManipulatorMotionPlanner2D() {}
+};
+
+class KinodynamicMotionPlanner {
+    public:
+        /// @brief Solve a motion planning problem. Derive class and override this method
+        /// @param problem Motion planning problem
+        /// @return Path solution of the kinodynamic agent
+        virtual amp::KinoPath plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) = 0;
+
+        virtual ~KinodynamicMotionPlanner() {}
 };
 
 class AStar {

@@ -16,7 +16,7 @@ void timer_example() {
         std::cout << "Time since last run: " << timer.now(TimeUnit::ms) - startTime << std::endl;
     }
     timer.stop();
-    std::cout << "Total time elapsed: " << Profiler::getTotalProfile("timer") << std::endl;
+    std::cout << "Total time since last run: " << Profiler::getTotalProfile("timer") << std::endl;
 }
 
 int main(int argc, char** argv) {
