@@ -108,6 +108,6 @@ int main(int argc, char** argv) {
 
     // Visualize and grade methods
     Visualizer::showFigures();
-    HW8::grade<MyCentralPlanner, MyDecentralPlanner>("thomas.dunnington@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
+    //HW8::grade<MyCentralPlanner, MyDecentralPlanner>("thomas.dunnington@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
     return 0;
 }
