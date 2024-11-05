@@ -21,7 +21,6 @@ class DynamicAgent {
         virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) = 0;
         AgentDimensions agent_dim;
         virtual ~DynamicAgent() {}
-
 };
 
 }
