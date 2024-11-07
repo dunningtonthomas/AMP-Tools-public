@@ -1,16 +1,36 @@
 #include "MyKinoRRT.h"
 
 void MySingleIntegrator::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
+    // Get a finer numerical integration
+    // double num_steps = 100;
+    // for(int i = 0; i < num_steps; i++) {
+    //     state += dt/num_steps * control;
+    // }
+
     state += dt * control;
 };
 
 void MyFirstOrderUnicycle::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
+    // double num_steps = 100;
+    // for(int i = 0; i < num_steps; i++) {
+    //     state(0) += control(0) * radius * std::cos(state(2)) * dt/num_steps;
+    //     state(1) += control(0) * radius * std::sin(state(2)) * dt/num_steps;
+    //     state(2) += control(1) * dt/num_steps;
+    // }
     state(0) += control(0) * radius * std::cos(state(2)) * dt;
     state(1) += control(0) * radius * std::sin(state(2)) * dt;
     state(2) += control(1) * dt;
 };
 
 void MySecondOrderUnicycle::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
+    // double num_steps = 100;
+    // for(int i = 0; i < num_steps; i++) {
+    //     state(0) += state(3) * radius * std::cos(state(2)) * dt/num_steps;
+    //     state(1) += state(3) * radius * std::sin(state(2)) * dt/num_steps;
+    //     state(2) += state(4) * dt/num_steps;
+    //     state(3) += control(0) * dt/num_steps;
+    //     state(4) += control(1) * dt/num_steps;
+    // }
     state(0) += state(3) * radius * std::cos(state(2)) * dt;
     state(1) += state(3) * radius * std::sin(state(2)) * dt;
     state(2) += state(4) * dt;
@@ -82,7 +102,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
 
                 // Add zero control for the final goal node
                 path.controls.push_back(Eigen::VectorXd::Zero(problem.u_bounds.size()));
-                path.durations.push_back(dt);
+                path.durations.push_back(0.0);
 
                 // Loop until we get to the initial node
                 while(nodes[curr_node] != problem.q_init) {
@@ -189,23 +209,22 @@ double MyKinoRRT::configurationDistance(const amp::KinodynamicProblem2D& problem
 // @brief create a collision free subpath from the nearest node to a new node
 bool MyKinoRRT::createSubpath(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& q_rand, Eigen::VectorXd& q_new, Eigen::VectorXd& control) {
     // Loop through multiple random controls and determine if the path is collision free
-    int num_controls = 25;
+    int num_controls = 15;
     bool subpath_found = false;
     double min_distance = std::numeric_limits<double>::max();
     for(int i = 0; i < num_controls; i++) {
         // Sample a random control input
-        Eigen::VectorXd control_temp = randomControl(problem);
+        Eigen::VectorXd control_candidate = randomControl(problem);
+        Eigen::VectorXd q_new_candidate;
 
         // Check if the path is valid
-        if(isSubpathCollisionFree(problem, agent, q_near, control_temp)) {
+        if(isSubpathCollisionFree(problem, agent, q_near, q_new_candidate, control_candidate)) {
             // Check if the new control is closer to the goal
-            Eigen::VectorXd q_temp = q_near;
-            agent.propagate(q_temp, control_temp, dt);
-            double distance = configurationDistance(problem, q_temp, q_rand);
+            double distance = configurationDistance(problem, q_new_candidate, q_rand);
             if(distance < min_distance) {
                 min_distance = distance;
-                q_new = q_temp;
-                control = control_temp;
+                q_new = q_new_candidate;
+                control = control_candidate;
                 subpath_found = true;
             }
         }
@@ -215,10 +234,11 @@ bool MyKinoRRT::createSubpath(const amp::KinodynamicProblem2D& problem, amp::Dyn
 
 
 // @brief check if a local trajectory from a node with a given control and time step is collision free
-bool MyKinoRRT::isSubpathCollisionFree(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& control) {
+bool MyKinoRRT::isSubpathCollisionFree(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& q_new, Eigen::VectorXd& control) {
     // Discretize the control by 100 steps along the dt change and check for collision
-    int num_steps = 50;
-    Eigen::VectorXd q_new = q_near;
+    // Return boolean success and q_new by reference to update the new state
+    int num_steps = 100;
+    q_new = q_near;
     for(int i = 0; i < num_steps; i++) {
         // Propagate the state forward according to dynamics model
         agent.propagate(q_new, control, dt/num_steps);
@@ -247,17 +267,18 @@ bool MyKinoRRT::isSystemValid(const amp::KinodynamicProblem2D& problem, const Ei
 bool MyKinoRRT::obstacleCollision(const amp::KinodynamicProblem2D& problem, const amp::Obstacle2D& obstacle, const Eigen::VectorXd& agent_configuration) {
     // Get the x,y location
     Eigen::Vector2d agent_position(agent_configuration(0), agent_configuration(1));
+    Eigen::Vector2d closest_point;
     
     // Check if point robot
     if(problem.isPointAgent) {
         // In polygon collision
-        if(isInsidePolygon(obstacle, agent_position)) {
+        if(isInsidePolygon(obstacle, agent_position) || distanceToObstacle(agent_position, obstacle, closest_point) <= 0.1) {
             return true;
         }
     } else {
         // In polygon collision and check geometry intersections as well
         // ADD GEOMETRIC CONSIDERATIONS HERE TOO
-        if(isInsidePolygon(obstacle, agent_position)) {
+        if(isInsidePolygon(obstacle, agent_position) || distanceToObstacle(agent_position, obstacle, closest_point) <= 0.1) {
             return true;
         }
     }

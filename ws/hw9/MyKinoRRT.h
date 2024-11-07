@@ -12,7 +12,7 @@
 class MyKinoRRT : public amp::KinodynamicRRT {
     public:
         // Default constructor
-        MyKinoRRT() : goal_bias(0.05), max_iterations(50000), epsilon(0.5), success(false), dt(0.2) {}
+        MyKinoRRT() : goal_bias(0.05), max_iterations(10000), epsilon(0.5), success(false), dt(0.3) {}
 
         // @brief Use RRT Kinodynamic planning
         virtual amp::KinoPath plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) override;
@@ -36,7 +36,7 @@ class MyKinoRRT : public amp::KinodynamicRRT {
         bool createSubpath(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& q_rand, Eigen::VectorXd& q_new, Eigen::VectorXd& control);
 
         // @brief check if the subpath between two nodes is collision free
-        bool isSubpathCollisionFree(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& q_rand);
+        bool isSubpathCollisionFree(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& q_new, Eigen::VectorXd& q_rand);
 
         // @brief check if a configuration is in collision with the environment or other agents
         bool isSystemValid(const amp::KinodynamicProblem2D& problem, const Eigen::VectorXd& q);
