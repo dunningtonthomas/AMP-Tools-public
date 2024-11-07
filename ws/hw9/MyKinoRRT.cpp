@@ -4,13 +4,27 @@ void MySingleIntegrator::propagate(Eigen::VectorXd& state, Eigen::VectorXd& cont
     state += dt * control;
 };
 
+void MyFirstOrderUnicycle::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
+    state(0) += control(0) * radius * std::cos(state(2)) * dt;
+    state(1) += control(0) * radius * std::sin(state(2)) * dt;
+    state(2) += control(1) * dt;
+};
+
+void MySecondOrderUnicycle::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
+    state(0) += state(3) * radius * std::cos(state(2)) * dt;
+    state(1) += state(3) * radius * std::sin(state(2)) * dt;
+    state(2) += state(4) * dt;
+    state(3) += control(0) * dt;
+    state(4) += control(1) * dt;
+};
+
 amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) {
     // Kinodynami RRT Variables
     amp::KinoPath path;
     Eigen::VectorXd state = problem.q_init;
 
     // Add the initial state
-    path.waypoints.push_back(state);
+    //path.waypoints.push_back(state);
     nodes[0] = state;
 
     // Run Kinodynamic RRT
@@ -46,11 +60,19 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
             // Check if the new node is close enough to the goal
             if(isSystemInGoal(problem, q_new)) {
                 std::cout << "RRT Path found in "<< iteration << " iterations, reconstructing path..." << std::endl;
-                std::cout << "Final Node: " << q_new.transpose() << std::endl;
 
-                // output the goal location
+                // Propagate with controls again to test next state
+                Eigen::VectorXd q_temp = q_new;
+                agent.propagate(q_temp, control, dt);
+
+
+                int i = 0;
                 for(const auto& goal : problem.q_goal) {
-                    std::cout << "Goal: " << goal.first << " " << goal.second << std::endl;
+                    std::cout << "Goal " << i << " Bounds: " << goal.first << " " << goal.second << std::endl;
+                    std::cout << "Previous State " << i << ": " << q_near(i) << std::endl;
+                    std::cout << "Final State " << i << ": " << q_new(i) << std::endl;
+                    std::cout << "Next State " << i << ": " << q_temp(i) << std::endl << std::endl;
+                    i++;
                 }
 
                 // Reconstruct the path
@@ -167,26 +189,28 @@ double MyKinoRRT::configurationDistance(const amp::KinodynamicProblem2D& problem
 // @brief create a collision free subpath from the nearest node to a new node
 bool MyKinoRRT::createSubpath(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& q_rand, Eigen::VectorXd& q_new, Eigen::VectorXd& control) {
     // Loop through multiple random controls and determine if the path is collision free
-    int num_controls = 100;
+    int num_controls = 25;
+    bool subpath_found = false;
+    double min_distance = std::numeric_limits<double>::max();
     for(int i = 0; i < num_controls; i++) {
         // Sample a random control input
         Eigen::VectorXd control_temp = randomControl(problem);
 
         // Check if the path is valid
         if(isSubpathCollisionFree(problem, agent, q_near, control_temp)) {
-            // Return the control input
-            control = control_temp;
-
-            // Propagate the state forward according to dynamics model
-            Eigen::VectorXd state = q_near;
-            agent.propagate(state, control, dt);
-
-            // Return the new state
-            q_new = state;
-            return true;
+            // Check if the new control is closer to the goal
+            Eigen::VectorXd q_temp = q_near;
+            agent.propagate(q_temp, control_temp, dt);
+            double distance = configurationDistance(problem, q_temp, q_rand);
+            if(distance < min_distance) {
+                min_distance = distance;
+                q_new = q_temp;
+                control = control_temp;
+                subpath_found = true;
+            }
         }
     }
-    return false;
+    return subpath_found;
 }
 
 
@@ -252,5 +276,15 @@ bool MyKinoRRT::isSystemInGoal(const amp::KinodynamicProblem2D& problem, const E
         }
         i++;
     }
+
+    // DEBUGGING: ADD BUFFER ZONE SO IT IS A SMALLER GOAL
+    // int i = 0;
+    // for(const auto& goal : problem.q_goal) {
+    //     if(q(i) < (goal.first + 0.05) || q(i) > (goal.second - 0.05)) {
+    //         return false;
+    //     }
+    //     i++;
+    // }
+
     return true;
 }

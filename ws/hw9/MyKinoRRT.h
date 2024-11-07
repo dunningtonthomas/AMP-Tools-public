@@ -12,7 +12,7 @@
 class MyKinoRRT : public amp::KinodynamicRRT {
     public:
         // Default constructor
-        MyKinoRRT() : goal_bias(0.05), max_iterations(7500), epsilon(0.5), success(false), dt(0.1) {}
+        MyKinoRRT() : goal_bias(0.05), max_iterations(50000), epsilon(0.5), success(false), dt(0.2) {}
 
         // @brief Use RRT Kinodynamic planning
         virtual amp::KinoPath plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) override;
@@ -76,12 +76,28 @@ class MySingleIntegrator : public amp::DynamicAgent {
 
 class MyFirstOrderUnicycle : public amp::DynamicAgent {
     public:
-        virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) override {};
+        MyFirstOrderUnicycle() {
+            agent_dim.length = 0.0;
+            agent_dim.width = 0.0;
+            radius = 0.25;
+        }
+        virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) override;
+
+    private:
+        double radius;
 };
 
 class MySecondOrderUnicycle : public amp::DynamicAgent {
     public:
-        virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) override {};
+        MySecondOrderUnicycle() {
+            agent_dim.length = 0.0;
+            agent_dim.width = 0.0;
+            radius = 0.25;
+        }
+        virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) override;
+
+    private:
+        double radius;
 };
 
 class MySimpleCar : public amp::DynamicAgent {
