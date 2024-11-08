@@ -59,6 +59,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
 
         // Check if the subpath is collision free
         if(subpath_bool) {
+            //std::cout << "Iteration: " << iteration << " Subpath found" << std::endl;
             // Add the new state to the tree
             amp::Node new_node = nodes.size();
             nodes[new_node] = q_new;
@@ -114,8 +115,34 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
     // Reconstruct the path to the most recent node
     std::cout << "RRT Path not found in " << iteration << " iterations, returning invalid final path" << std::endl;
 
+
+    // CAR DEBUGGING
+    // Reconstruct the path
+    amp::Node final_node = nodes.size() - 1;
+    amp::Node curr_node = final_node;
+    amp::Node control_node = parents[final_node];
+
+    // Add zero control for the final goal node
+    path.controls.push_back(Eigen::VectorXd::Zero(problem.u_bounds.size()));
+    path.durations.push_back(0.0);
+
+    // Loop until we get to the initial node
+    while(nodes[curr_node] != problem.q_init) {
+        path.waypoints.push_back(nodes[curr_node]);
+        path.controls.push_back(controls[curr_node]);
+        path.durations.push_back(dt);
+        curr_node = parents[curr_node];
+    }
+    // Add initial node
+    path.waypoints.push_back(nodes[curr_node]);
+
+    // Reverse the path
+    std::reverse(path.waypoints.begin(), path.waypoints.end());
+    std::reverse(path.controls.begin(), path.controls.end());
+    std::reverse(path.durations.begin(), path.durations.end());
+
     // Return the path
-    path.valid = false;
+    path.valid = true;
     return path;
 }
 
@@ -286,7 +313,7 @@ bool MyKinoRRT::obstacleCollision(const amp::KinodynamicProblem2D& problem, cons
     } else {
         // In polygon collision and check geometry intersections as well
         // ADD GEOMETRIC CONSIDERATIONS HERE TOO
-        if(isInsidePolygon(obstacle, agent_position) || distanceToObstacle(agent_position, obstacle, closest_point) <= 0.1) {
+        if(polygonPolygonCollision(problem, obstacle, agent_configuration)) {
             return true;
         }
     }
@@ -311,13 +338,24 @@ bool MyKinoRRT::isSystemInGoal(const amp::KinodynamicProblem2D& problem, const E
 
 // @brief check if the car robot is in collision with an obstacle
 bool MyKinoRRT::polygonPolygonCollision(const amp::KinodynamicProblem2D& problem, const amp::Obstacle2D& obstacle, const Eigen::VectorXd& agent_configuration) {
-    // Define the agent polygon
-    std::vector<Eigen::Vector2d> agent_polygon;
-    Eigen::Vector2d agent_position(agent_configuration(0), agent_configuration(1));
-    agent_polygon.push_back(agent_position);
-    agent_polygon.push_back(agent_position + Eigen::Vector2d(agent_configuration(2), agent_configuration(3)));
-    agent_polygon.push_back(agent_position + Eigen::Vector2d(agent_configuration(2), -agent_configuration(3)));
-    agent_polygon.push_back(agent_position - Eigen::Vector2d(agent_configuration(2), agent_configuration(3)));
-    agent_polygon.push_back(agent_position - Eigen::Vector2d(agent_configuration(2), -agent_configuration(3)));
+    // Define vertices of the agent polygon
+    Eigen::Vector2d v1(agent_configuration(0) + problem.agent_dim.width / 2.0 * std::sin(agent_configuration(2)), agent_configuration(1) - problem.agent_dim.width / 2.0 * std::cos(agent_configuration(2)));
+    Eigen::Vector2d v2(v1(0) + problem.agent_dim.length * std::cos(agent_configuration(2)), v1(1) + problem.agent_dim.length * std::sin(agent_configuration(2)));
+    Eigen::Vector2d v3(v2(0) - problem.agent_dim.width * std::sin(agent_configuration(2)), v2(1) + problem.agent_dim.width * std::cos(agent_configuration(2)));
+    Eigen::Vector2d v4(v3(0) - problem.agent_dim.length * std::cos(agent_configuration(2)), v3(1) - problem.agent_dim.length * std::sin(agent_configuration(2)));
+
+    // Add the vertices to the agent polygon
+    std::vector<Eigen::Vector2d> agent_polygon = {v1, v2, v3, v4};
+
+    // Use line segment intersection to see if any of the lines interesct an obstacle
+    for(int i = 0; i < agent_polygon.size(); i++) {
+        Eigen::Vector2d p1 = agent_polygon[i];
+        Eigen::Vector2d p2 = agent_polygon[(i + 1) % agent_polygon.size()];
+        
+        // Check for collision
+        if(inCollision(problem, p1, p2)) {
+            return true;
+        }
+    }
     return false;
 }
