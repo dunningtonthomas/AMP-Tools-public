@@ -31,6 +31,17 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
     amp::KinoPath path;
     Eigen::VectorXd state = problem.q_init;
 
+    // Output the control bounds
+    std::cout << "Control 1 Bounds: " << problem.u_bounds[0].first << " " << problem.u_bounds[0].second << std::endl;
+    std::cout << "Control 2 Bounds: " << problem.u_bounds[1].first << " " << problem.u_bounds[1].second << std::endl;
+
+
+    // If not a point robot, define the dimensions of the agent
+    if(!problem.isPointAgent) {
+        agent.agent_dim = problem.agent_dim;
+        std::cout << "Agent Dimensions: " << agent.agent_dim.length << " " << agent.agent_dim.width << std::endl;
+    }
+
     // Add the initial state
     //path.waypoints.push_back(state);
     nodes[0] = state;
@@ -78,7 +89,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
                 int i = 0;
                 for(const auto& goal : problem.q_goal) {
                     std::cout << "Goal " << i << " Bounds: " << goal.first << " " << goal.second << std::endl;
-                    std::cout << "Final State " << i << ": " << q_new(i) << std::endl;
+                    std::cout << "Final State " << i << ": " << q_new(i) << std::endl << std::endl;
                     i++;
                 }
 
@@ -236,7 +247,7 @@ double MyKinoRRT::configurationDistance(const amp::KinodynamicProblem2D& problem
 // @brief create a collision free subpath from the nearest node to a new node
 bool MyKinoRRT::createSubpath(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent, Eigen::VectorXd& q_near, Eigen::VectorXd& q_rand, Eigen::VectorXd& q_new, Eigen::VectorXd& control) {
     // Loop through multiple random controls and determine if the path is collision free
-    int num_controls = 15;
+    int num_controls = u_samples;
     bool subpath_found = false;
     double min_distance = std::numeric_limits<double>::max();
     for(int i = 0; i < num_controls; i++) {
@@ -354,6 +365,13 @@ bool MyKinoRRT::polygonPolygonCollision(const amp::KinodynamicProblem2D& problem
         
         // Check for collision
         if(inCollision(problem, p1, p2)) {
+            return true;
+        }
+    }
+
+    // Also check if any of the vertices are outside the bounds
+    for(const auto& vertex : agent_polygon) {
+        if(vertex(0) < problem.x_min || vertex(0) > problem.x_max || vertex(1) < problem.y_min || vertex(1) > problem.y_max) {
             return true;
         }
     }

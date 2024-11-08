@@ -12,7 +12,10 @@
 class MyKinoRRT : public amp::KinodynamicRRT {
     public:
         // Default constructor
-        MyKinoRRT() : goal_bias(0.05), max_iterations(50000), epsilon(0.5), success(false), dt(0.3) {}
+        MyKinoRRT() : goal_bias(0.05), max_iterations(50000), success(false), dt(0.3), u_samples(15) {}
+
+        // Inputs constructor
+        MyKinoRRT(int u_samples) : goal_bias(0.05), max_iterations(50000), success(false), dt(0.3), u_samples(u_samples) {}
 
         // @brief Use RRT Kinodynamic planning
         virtual amp::KinoPath plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) override;
@@ -54,9 +57,9 @@ class MyKinoRRT : public amp::KinodynamicRRT {
         // RRT Hyperparameters
         double goal_bias;
         int max_iterations;
-        double epsilon;
         bool success;
         double dt;
+        int u_samples;
 
         // Node map and parent map, control map
         std::map<amp::Node, Eigen::VectorXd> nodes;
