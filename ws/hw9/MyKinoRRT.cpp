@@ -1,39 +1,27 @@
 #include "MyKinoRRT.h"
 
 void MySingleIntegrator::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
-    // Get a finer numerical integration
-    // double num_steps = 100;
-    // for(int i = 0; i < num_steps; i++) {
-    //     state += dt/num_steps * control;
-    // }
-
     state += dt * control;
 };
 
 void MyFirstOrderUnicycle::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
-    // double num_steps = 100;
-    // for(int i = 0; i < num_steps; i++) {
-    //     state(0) += control(0) * radius * std::cos(state(2)) * dt/num_steps;
-    //     state(1) += control(0) * radius * std::sin(state(2)) * dt/num_steps;
-    //     state(2) += control(1) * dt/num_steps;
-    // }
     state(0) += control(0) * radius * std::cos(state(2)) * dt;
     state(1) += control(0) * radius * std::sin(state(2)) * dt;
     state(2) += control(1) * dt;
 };
 
 void MySecondOrderUnicycle::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
-    // double num_steps = 100;
-    // for(int i = 0; i < num_steps; i++) {
-    //     state(0) += state(3) * radius * std::cos(state(2)) * dt/num_steps;
-    //     state(1) += state(3) * radius * std::sin(state(2)) * dt/num_steps;
-    //     state(2) += state(4) * dt/num_steps;
-    //     state(3) += control(0) * dt/num_steps;
-    //     state(4) += control(1) * dt/num_steps;
-    // }
     state(0) += state(3) * radius * std::cos(state(2)) * dt;
     state(1) += state(3) * radius * std::sin(state(2)) * dt;
     state(2) += state(4) * dt;
+    state(3) += control(0) * dt;
+    state(4) += control(1) * dt;
+};
+
+void MySimpleCar::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
+    state(0) += state(3) * std::cos(state(2)) * dt;
+    state(1) += state(3) * std::sin(state(2)) * dt;
+    state(2) += state(3) / agent_dim.length * std::tan(state(4)) * dt;
     state(3) += control(0) * dt;
     state(4) += control(1) * dt;
 };
@@ -89,9 +77,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
                 int i = 0;
                 for(const auto& goal : problem.q_goal) {
                     std::cout << "Goal " << i << " Bounds: " << goal.first << " " << goal.second << std::endl;
-                    std::cout << "Previous State " << i << ": " << q_near(i) << std::endl;
                     std::cout << "Final State " << i << ": " << q_new(i) << std::endl;
-                    std::cout << "Next State " << i << ": " << q_temp(i) << std::endl << std::endl;
                     i++;
                 }
 
@@ -188,11 +174,20 @@ amp::Node MyKinoRRT::nearestNeighbor(const amp::KinodynamicProblem2D& problem, c
 double MyKinoRRT::configurationDistance(const amp::KinodynamicProblem2D& problem, const Eigen::VectorXd& q1, const Eigen::VectorXd& q2) {
     // Calculate the distance between two configurations, prioritize the x, y distance
     std::vector<double> distances;
+    std::vector<double> anglular_distances;
     for(int i = 0; i < problem.q_bounds.size(); i++) {
         // Only calculate the distance for Cartesian dimensions
-        if(problem.isDimCartesian[i]) {
-            distances.push_back(std::abs(q1(i) - q2(i)));
-        } 
+        // if(problem.isDimCartesian[i]) {
+        //     distances.push_back(std::abs(q1(i) - q2(i)));
+        // } else {
+        //     // Calculate the angular distance
+        //     double angle_distance = std::abs(q1(i) - q2(i));
+        //     if(angle_distance > M_PI) {
+        //         angle_distance = 2 * M_PI - angle_distance;
+        //     }
+        //     anglular_distances.push_back(angle_distance);
+        // }
+        distances.push_back(std::abs(q1(i) - q2(i)));
     }
 
     // Calculate the Euclidean distance
@@ -201,6 +196,11 @@ double MyKinoRRT::configurationDistance(const amp::KinodynamicProblem2D& problem
         distance += dist * dist;
     }
     distance = std::sqrt(distance);
+
+    // Add angular distance 
+    // for(const auto& angle_dist : anglular_distances) {
+    //     distance += angle_dist;
+    // }
 
     return distance;
 }
@@ -260,6 +260,14 @@ bool MyKinoRRT::isSystemValid(const amp::KinodynamicProblem2D& problem, const Ei
             return false;
         }
     }
+
+    // Check if the state is outside the state bounds
+    for(int i = 0; i < problem.q_bounds.size(); i++) {
+        if(q(i) < problem.q_bounds[i].first || q(i) > problem.q_bounds[i].second) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -297,15 +305,19 @@ bool MyKinoRRT::isSystemInGoal(const amp::KinodynamicProblem2D& problem, const E
         }
         i++;
     }
-
-    // DEBUGGING: ADD BUFFER ZONE SO IT IS A SMALLER GOAL
-    // int i = 0;
-    // for(const auto& goal : problem.q_goal) {
-    //     if(q(i) < (goal.first + 0.05) || q(i) > (goal.second - 0.05)) {
-    //         return false;
-    //     }
-    //     i++;
-    // }
-
     return true;
+}
+
+
+// @brief check if the car robot is in collision with an obstacle
+bool MyKinoRRT::polygonPolygonCollision(const amp::KinodynamicProblem2D& problem, const amp::Obstacle2D& obstacle, const Eigen::VectorXd& agent_configuration) {
+    // Define the agent polygon
+    std::vector<Eigen::Vector2d> agent_polygon;
+    Eigen::Vector2d agent_position(agent_configuration(0), agent_configuration(1));
+    agent_polygon.push_back(agent_position);
+    agent_polygon.push_back(agent_position + Eigen::Vector2d(agent_configuration(2), agent_configuration(3)));
+    agent_polygon.push_back(agent_position + Eigen::Vector2d(agent_configuration(2), -agent_configuration(3)));
+    agent_polygon.push_back(agent_position - Eigen::Vector2d(agent_configuration(2), agent_configuration(3)));
+    agent_polygon.push_back(agent_position - Eigen::Vector2d(agent_configuration(2), -agent_configuration(3)));
+    return false;
 }

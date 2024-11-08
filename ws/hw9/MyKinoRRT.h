@@ -12,7 +12,7 @@
 class MyKinoRRT : public amp::KinodynamicRRT {
     public:
         // Default constructor
-        MyKinoRRT() : goal_bias(0.05), max_iterations(10000), epsilon(0.5), success(false), dt(0.3) {}
+        MyKinoRRT() : goal_bias(0.05), max_iterations(20000), epsilon(0.5), success(false), dt(0.3) {}
 
         // @brief Use RRT Kinodynamic planning
         virtual amp::KinoPath plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) override;
@@ -46,6 +46,9 @@ class MyKinoRRT : public amp::KinodynamicRRT {
 
         // @brief check if the disk robot is in collision with an obstacle
         bool obstacleCollision(const amp::KinodynamicProblem2D& problem, const amp::Obstacle2D& obstacle, const Eigen::VectorXd& agent_position);
+
+        // @brief check if the car robot is in collision with an obstacle
+        bool polygonPolygonCollision(const amp::KinodynamicProblem2D& problem, const amp::Obstacle2D& obstacle, const Eigen::VectorXd& agent_configuration);
 
     private:
         // RRT Hyperparameters
@@ -102,5 +105,5 @@ class MySecondOrderUnicycle : public amp::DynamicAgent {
 
 class MySimpleCar : public amp::DynamicAgent {
     public:
-        virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) override {};
+        virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) override;
 };
