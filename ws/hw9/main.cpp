@@ -20,12 +20,13 @@ std::unordered_map<AgentType, std::function<std::shared_ptr<amp::DynamicAgent>()
 int main(int argc, char** argv) {
     // Select problem, plan, check, and visualize
     bool benchmark = false;
-    int select = 7;
+    int select = 0;
     KinodynamicProblem2D prob = problems[select];
 
     // Hardcode the control bounds if it is the car problem
     if(select == 7 || select == 6) {
-        prob.u_bounds = {{-1.5, 2.0}, {-0.3, 0.3}};
+        // prob.u_bounds = {{-1.5, 2.0}, {-0.3, 0.3}};
+        prob.u_bounds = {{-3.0, 6.0}, {-3.0, 3.0}};
     }
 
     MyKinoRRT kino_planner;

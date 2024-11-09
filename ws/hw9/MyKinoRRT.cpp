@@ -19,9 +19,14 @@ void MySecondOrderUnicycle::propagate(Eigen::VectorXd& state, Eigen::VectorXd& c
 };
 
 void MySimpleCar::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
+    if(agent_dim.length == 0.0 || agent_dim.width == 0.0) {
+        agent_dim.length = 1.0;
+        agent_dim.width = 0.4;
+    }
+    double length = control(2);
     state(0) += state(3) * std::cos(state(2)) * dt;
     state(1) += state(3) * std::sin(state(2)) * dt;
-    state(2) += state(3) / agent_dim.length * std::tan(state(4)) * dt;
+    state(2) += state(3) / length * std::tan(state(4)) * dt;
     state(3) += control(0) * dt;
     state(4) += control(1) * dt;
 };
@@ -31,16 +36,15 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
     amp::KinoPath path;
     Eigen::VectorXd state = problem.q_init;
 
+    // Set the dimensions of the agent
+    agent.agent_dim.length = problem.agent_dim.length;
+    agent.agent_dim.width = problem.agent_dim.width;
+    
     // Output the control bounds
     std::cout << "Control 1 Bounds: " << problem.u_bounds[0].first << " " << problem.u_bounds[0].second << std::endl;
     std::cout << "Control 2 Bounds: " << problem.u_bounds[1].first << " " << problem.u_bounds[1].second << std::endl;
+    std::cout << "Agent Dimensions: " << agent.agent_dim.length << " " << agent.agent_dim.width << std::endl;
 
-
-    // If not a point robot, define the dimensions of the agent
-    if(!problem.isPointAgent) {
-        agent.agent_dim = problem.agent_dim;
-        std::cout << "Agent Dimensions: " << agent.agent_dim.length << " " << agent.agent_dim.width << std::endl;
-    }
 
     // Add the initial state
     //path.waypoints.push_back(state);
@@ -80,10 +84,6 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
             // Check if the new node is close enough to the goal
             if(isSystemInGoal(problem, q_new)) {
                 std::cout << "RRT Path found in "<< iteration << " iterations, reconstructing path..." << std::endl;
-
-                // Propagate with controls again to test next state
-                Eigen::VectorXd q_temp = q_new;
-                agent.propagate(q_temp, control, dt);
 
 
                 int i = 0;
@@ -161,6 +161,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
 
 // @brief Generate a random control input for a given agent
 Eigen::VectorXd MyKinoRRT::randomControl(const amp::KinodynamicProblem2D& problem) {
+    // Recreate a non static problem if the problem is the car
     Eigen::VectorXd control = Eigen::VectorXd::Random(problem.u_bounds.size());
 
     // Normalize control to be within the bounds of the problem
@@ -278,8 +279,11 @@ bool MyKinoRRT::isSubpathCollisionFree(const amp::KinodynamicProblem2D& problem,
     int num_steps = 100;
     q_new = q_near;
     for(int i = 0; i < num_steps; i++) {
-        // Propagate the state forward according to dynamics model
-        agent.propagate(q_new, control, dt/num_steps);
+        double length = problem.agent_dim.length;
+        // add length to end of control vector in a new vector
+        Eigen::VectorXd control_new = Eigen::VectorXd::Zero(control.size() + 1);
+        control_new << control, length;        
+        agent.propagate(q_new, control_new, dt/num_steps);
 
         // Check if the path is valid
         if(!isSystemValid(problem, q_new)) {

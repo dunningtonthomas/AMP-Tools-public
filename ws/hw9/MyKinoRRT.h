@@ -109,10 +109,12 @@ class MySecondOrderUnicycle : public amp::DynamicAgent {
 class MySimpleCar : public amp::DynamicAgent {
     public:
         // Default constructor
-        MySimpleCar() {
-            agent_dim.length = 5.0;
-            agent_dim.width = 2.0;
-        }
+        // MySimpleCar() {
+        //     // agent_dim.length = 5.0;
+        //     // agent_dim.width = 2.0;
+        //     agent_dim.length = 1.0;
+        //     agent_dim.width = 0.4;
+        // }
 
         virtual void propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) override;
 };
