@@ -5,6 +5,7 @@
 #include "MyKinoRRT.h"
 #include <chrono>
 #include <fstream>
+#include <cmath>
 
 using namespace amp;
 
@@ -19,14 +20,15 @@ std::unordered_map<AgentType, std::function<std::shared_ptr<amp::DynamicAgent>()
 
 int main(int argc, char** argv) {
     // Select problem, plan, check, and visualize
-    bool benchmark = false;
-    int select = 0;
+    bool benchmark = true;
+    int select = 6;
     KinodynamicProblem2D prob = problems[select];
 
     // Hardcode the control bounds if it is the car problem
     if(select == 7 || select == 6) {
-        // prob.u_bounds = {{-1.5, 2.0}, {-0.3, 0.3}};
-        prob.u_bounds = {{-3.0, 6.0}, {-3.0, 3.0}};
+        prob.u_bounds = {{-1.5, 2.0}, {-0.3, 0.3}};
+        //prob.u_bounds = {{-3.0, 6.0}, {-3.0, 3.0}};
+        prob.q_bounds[4] = {-M_PI/4.0, M_PI/4.0};
     }
 
     MyKinoRRT kino_planner;
@@ -72,8 +74,9 @@ int main(int argc, char** argv) {
     // Benchmark the planner
     if(benchmark) {
         std::cout << "Benchmarking MyKinoRRT..." << std::endl;
-        int num_runs = 50;
-        std::vector<int> u_samples = {1, 5, 10, 15};
+        int num_runs = 10;
+        //std::vector<int> u_samples = {1, 5, 10, 15};
+        std::vector<int> u_samples = {5};
 
         // List of path lengths and times
         std::list<std::vector<double>> path_lengths, path_times;
@@ -113,14 +116,16 @@ int main(int argc, char** argv) {
             // Add times and lengths to list
             path_lengths.push_back(path_length);
             path_times.push_back(path_time);
-            success_rates.push_back(std::accumulate(valid_solutions.begin(), valid_solutions.end(), 0));
+            int success = std::accumulate(valid_solutions.begin(), valid_solutions.end(), 0) * 100 / num_runs;
+            success_rates.push_back(success);
         }
 
         // Visualize the results
-        std::vector<std::string> labels = {"1", "5", "10", "15"};
-        //Visualizer::makeBoxPlot(path_times, labels, "Path Time", "Number of Control Samples", "Computation Time (ms)");
-        //Visualizer::makeBoxPlot(path_lengths, labels, "Path Length", "Number of Control Samples", "Path Length (m)");
-        //Visualizer::makeBarGraph(success_rates, labels, "Success Rates", "Number of Control Samples", "Number of Valid Solutions");
+        //std::vector<std::string> labels = {"1", "5", "10", "15"};
+        std::vector<std::string> labels = {"1"};
+        Visualizer::makeBoxPlot(path_times, labels, "Path Time", "Number of Control Samples", "Computation Time (ms)");
+        Visualizer::makeBoxPlot(path_lengths, labels, "Path Length", "Number of Control Samples", "Path Length (m)");
+        Visualizer::makeBarGraph(success_rates, labels, "Success Rates", "Number of Control Samples", "Number of Valid Solutions");
     }
 
     Visualizer::showFigures();
