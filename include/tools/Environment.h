@@ -63,7 +63,7 @@ struct MultiAgentProblem2D : Environment2D {
     inline std::size_t numAgents() const {return agent_properties.size();}
 };
 
-enum class AgentType { SingleIntegrator, FirstOrderUnicycle, SecondOrderUnicycle, SimpleCar };
+enum class AgentType { SingleIntegrator, FirstOrderUnicycle, SecondOrderUnicycle, SimpleCar, aircraft };
 /// @brief Kinodynamic problem with 2D workspace, obstacles, and bounds
 struct KinodynamicProblem2D : Environment2D {
     KinodynamicProblem2D() = default;
