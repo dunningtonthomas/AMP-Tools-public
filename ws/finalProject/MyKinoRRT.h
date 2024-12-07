@@ -133,9 +133,3 @@ class MySimpleCar : public amp::DynamicAgent {
 };
 
 
-// Class for constructing the environment
-class finalProject {
-    public:
-        amp::KinodynamicProblem2D getEnv1();
-        amp::KinodynamicProblem2D getEnv2();
-};

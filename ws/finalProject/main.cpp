@@ -3,6 +3,7 @@
 #include "hw/HW9.h"
 #include "hw/HW2.h"
 #include "MyKinoRRT.h"
+#include "createEnv.h"
 #include <chrono>
 #include <fstream>
 #include <cmath>
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
     // TODO: Create a problem with buildings as obstacles
 
     // Get the problem
-    finalProject obj;
+    generateEnv obj;
     KinodynamicProblem2D prob = obj.getEnv1();
     Visualizer::makeFigure(prob);
 
@@ -38,6 +39,10 @@ int main(int argc, char** argv) {
         Visualizer::makeFigure(prob, path, false); // Set to 'true' to render animation
         //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
     }
+
+    // Get a regular 2D problem
+    Problem2D prob2D = obj.getEnvRand();
+    Visualizer::makeFigure(prob2D);
 
 
 
@@ -54,21 +59,22 @@ int main(int argc, char** argv) {
     // }
 
     // Write the controls, time, and state data to a data file
-    std::ofstream data_file;
-    data_file.open("../../file_dump/controls.txt");
+    // std::ofstream data_file;
+    // data_file.open("../../file_dump/controls.txt");
 
-    // Check if the file opened correctly
-    if (!data_file.is_open()) {
-        std::cerr << "Error opening file" << std::endl;
-    } else {
-        std::cout << "File opened successfully" << std::endl;
-        double total_time = 0.0;
-        for (int i = 0; i < path.controls.size(); i++) {
-            total_time += path.durations[i];
-            data_file << total_time << " " << path.controls[i](0) << " " << path.controls[i](1) << std::endl;
-        }
-    }
-    data_file.close();
+    // // Check if the file opened correctly
+    // if (!data_file.is_open()) {
+    //     std::cerr << "Error opening file" << std::endl;
+    // } else {
+    //     std::cout << "File opened successfully" << std::endl;
+    //     double total_time = 0.0;
+    //     for (int i = 0; i < path.controls.size(); i++) {
+    //         total_time += path.durations[i];
+    //         data_file << total_time << " " << path.controls[i](0) << " " << path.controls[i](1) << std::endl;
+    //     }
+    // }
+    // data_file.close();
+
 
     Visualizer::showFigures();
     return 0;

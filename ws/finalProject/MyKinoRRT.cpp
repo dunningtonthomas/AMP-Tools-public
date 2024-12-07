@@ -1,42 +1,5 @@
 #include "MyKinoRRT.h"
 
-amp::KinodynamicProblem2D finalProject::getEnv1() {
-    amp::KinodynamicProblem2D prob;
-    prob.agent_type = amp::AgentType::SingleIntegrator;
-    prob.isPointAgent = true;
-    prob.q_init = Eigen::Vector2d(0.0, 0.0);
-    prob.q_goal = {std::make_pair(290.0, 310.0), std::make_pair(290.0, 310.0)};
-    prob.q_bounds = {std::make_pair(0.0, 400.0), std::make_pair(0.0, 400.0)};
-    prob.u_bounds = {std::make_pair(-1.0, 1.0), std::make_pair(-1.0, 1.0)};
-    prob.isDimCartesian = {true, true};
-
-    // Set the environment bounds
-    prob.x_min = 0.0;
-    prob.x_max = 400.0;
-    prob.y_min = 0.0;
-    prob.y_max = 400.0;
-
-    // Setup obstacles
-    std::vector<Eigen::Vector2d> obstacle_vertices = {{33.0, 33.0}, {66.0, 33.0}, {66.0, 66.0}, {33.0, 66.0}};
-    amp::Obstacle2D obstacle1(obstacle_vertices);
-    obstacle_vertices = {{70.0, 100.0}, {130.0, 100.0}, {130.0, 130.0}, {70.0, 130.0}};
-    amp::Obstacle2D obstacle2(obstacle_vertices);
-    obstacle_vertices = {{210.0, 20.0}, {270.0, 20.0}, {270.0, 50.0}, {210.0, 50.0}};
-    amp::Obstacle2D obstacle3(obstacle_vertices);
-    obstacle_vertices = {{300.0, 100.0}, {330.0, 100.0}, {330.0, 160.0}, {300.0, 160.0}};
-    amp::Obstacle2D obstacle4(obstacle_vertices);
-    obstacle_vertices = {{200.0, 200.0}, {230.0, 200.0}, {230.0, 260.0}, {200.0, 260.0}};
-    amp::Obstacle2D obstacle5(obstacle_vertices);
-    
-    prob.obstacles.push_back(obstacle1);
-    prob.obstacles.push_back(obstacle2);
-    prob.obstacles.push_back(obstacle3);
-    prob.obstacles.push_back(obstacle4);
-    prob.obstacles.push_back(obstacle5);
-
-    return prob;
-}
-
 void AircraftKinematicModel::propagate(Eigen::VectorXd& state, Eigen::VectorXd& control, double dt) {
     // Put the kinematic model equations here
 };
