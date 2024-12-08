@@ -29,7 +29,7 @@ class rangeFindingCar {
         rangeFindingCar() {
             agent_prop.length = 0.0;
             agent_prop.width = 0.0;
-            agent_prop.radius = 10.0;
+            agent_prop.radius = 5.0;
         }
 
         // Propagate the state forward according to dynamics model

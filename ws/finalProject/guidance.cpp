@@ -38,7 +38,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     std::vector<Eigen::Vector2d> current_waypoints = path_init.waypoints;
     Eigen::Vector2d q_curr = problem.q_init;
     int curr_index = 0;
-    int intermediate_goal_index = curr_index + 20;  // Heuristic lookahead value
+    int intermediate_goal_index = curr_index + 10;  // Heuristic lookahead value
 
     // Write initial waypoints to a file
     writeWaypointsToFile(current_waypoints, data_file);
