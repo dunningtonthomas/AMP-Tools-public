@@ -4,6 +4,17 @@
 
 // @brief Planning algorithm, returns a valid path using the range finder for planning
 amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingCar& agent) {
+    // Write waypoints to a file
+    std::ofstream data_file;
+    data_file.open("../../file_dump/adaptive.txt");
+
+    // Check if the file opened correctly
+    if (!data_file.is_open()) {
+        std::cerr << "Error opening file" << std::endl;
+    } else {
+        std::cout << "File opened successfully" << std::endl;
+    }
+    
     // Overall path found boolean
     bool path_found = false;
     
@@ -28,6 +39,9 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     Eigen::Vector2d q_curr = problem.q_init;
     int curr_index = 0;
     int intermediate_goal_index = curr_index + 20;  // Heuristic lookahead value
+
+    // Write initial waypoints to a file
+    writeWaypointsToFile(current_waypoints, data_file);
 
     // Take steps along the path until we get to the goal
     while(curr_index < current_waypoints.size() - 1) {
@@ -64,6 +78,9 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
             // Replace the path in collision with the new subpath
             current_waypoints.erase(current_waypoints.begin() + curr_index, current_waypoints.begin() + intermediate_goal_index);
             current_waypoints.insert(current_waypoints.begin() + curr_index, path_new.waypoints.begin(), path_new.waypoints.end());
+
+            // Write the new waypoints to the file
+            writeWaypointsToFile(current_waypoints, data_file);
         }
 
         // Move forward
@@ -76,6 +93,10 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     // Create the final path using the current waypoints
     amp::Path2D final_path;
     final_path.waypoints = current_waypoints;
+
+    // Close the file
+    data_file.close();
+
     return final_path;
 }
 
@@ -121,4 +142,14 @@ bool adaptiveRRT::waypointsIntersectObstacles(const std::vector<Eigen::Vector2d>
         }
     }
     return false;
+}
+
+
+// @brief Write the current waypoints to a file by appending it and adding to the end row
+void adaptiveRRT::writeWaypointsToFile(const std::vector<Eigen::Vector2d>& waypoints, std::ofstream& data_file) {
+    // Write the waypoints to the file
+    for(const auto& waypoint : waypoints) {
+        data_file << waypoint(0) << " " << waypoint(1) << " ";
+    }
+    data_file << std::endl;
 }

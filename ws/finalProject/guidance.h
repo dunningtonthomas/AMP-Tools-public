@@ -14,6 +14,7 @@
 
 // Include random library to get uniform sampling
 #include <random>
+#include <fstream>
 
 // This class will implement the high level planner for the adaptive RRT
 class adaptiveRRT {
@@ -30,6 +31,9 @@ class adaptiveRRT {
 
         // @brief Determines if the waypoints within the range finder radius intersect with any obstacles
         bool waypointsIntersectObstacles(const std::vector<Eigen::Vector2d>& waypoints, const std::vector<amp::Obstacle2D>& obstacles);
+
+        // @brief Write the current waypoints to a file by appending it and adding to the end row
+        void writeWaypointsToFile(const std::vector<Eigen::Vector2d>& waypoints, std::ofstream& data_file);
     private:
 
 };

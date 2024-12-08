@@ -64,6 +64,17 @@ amp::KinodynamicProblem2D generateEnv::getEnvRandKino() {
 
 // @brief This function will create a random environment for a regular 2D problem for RRT
 amp::Problem2D generateEnv::getEnvRand() {
+    // Write obstacle locations to a file
+    std::ofstream data_file;
+    data_file.open("../../file_dump/obstacles.txt");
+
+    // Check if the file opened correctly
+    if (!data_file.is_open()) {
+        std::cerr << "Error opening file" << std::endl;
+    } else {
+        std::cout << "File opened successfully" << std::endl;
+    }
+
     // Create the problem
     amp::Problem2D prob;
     prob.q_init = Eigen::Vector2d(5.0, 5.0);
@@ -74,7 +85,7 @@ amp::Problem2D generateEnv::getEnvRand() {
     prob.y_max = 100.0;
 
     // Create a vector of obstacles, each obstacle has a coordinate and a radius
-    int num_obstacles = 100;
+    int num_obstacles = 200;
     std::vector<amp::Obstacle2D> obstacles;
     std::vector<TreeObstacle> obstacle_vec;
 
@@ -96,6 +107,9 @@ amp::Problem2D generateEnv::getEnvRand() {
             // Add the obstacle to the vector
             obstacle_vec.push_back(obstacle);
 
+            // Write the obstacle to the file
+            data_file << obstacle.center.x() << " " << obstacle.center.y() << " " << obstacle.radius << std::endl;
+
             // Create the obstacle with vertices
             amp::Obstacle2D obstacle_final = createObstacle(obstacle);
 
@@ -104,6 +118,7 @@ amp::Problem2D generateEnv::getEnvRand() {
         }
     }
 
+    data_file.close();
     return prob;
 }
 
