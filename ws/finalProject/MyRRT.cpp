@@ -45,6 +45,7 @@ amp::Path2D MyRRT::plan(const amp::Problem2D& problem) {
         success = true;
     } else {
         // Just return the init and goal locations
+        std::cout << "No path found, returning init and goal" << std::endl;
         path.waypoints.push_back(problem.q_init);
         path.waypoints.push_back(problem.q_goal);
     }

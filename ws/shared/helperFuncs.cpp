@@ -154,6 +154,25 @@ namespace amp {
     }
 
     // @brief Check if the next position is in collision with an obstacle
+    bool inCollision(const std::vector<amp::Obstacle2D>& obstacles, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos) {
+        // Check if there is a collision by checking if two line segments intersect
+        for(const auto& obstacle : obstacles) {
+            std::vector<Eigen::Vector2d> vertices = obstacle.verticesCW();   // Clockwise vertices
+            for(int i = 0; i < vertices.size(); i++) {
+                // Get points clockwise around the obstacle
+                Eigen::Vector2d p2 = vertices[i];
+                Eigen::Vector2d q2 = vertices[(i + 1) % vertices.size()];
+
+                // Check if the heading intersects with the obstacle
+                if(intersect(current_pos, next_pos, p2, q2)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // @brief Check if the next position is in collision with an obstacle
     bool inCollision(const amp::KinodynamicProblem2D& problem, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos) {
         // Check if there is a collision by checking if two line segments intersect
         for(const auto& obstacle : problem.obstacles) {

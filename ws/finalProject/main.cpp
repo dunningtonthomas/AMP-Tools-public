@@ -3,6 +3,7 @@
 #include "hw/HW9.h"
 #include "hw/HW2.h"
 #include "MyKinoRRT.h"
+#include "MyRRT.h"
 #include "createEnv.h"
 #include <chrono>
 #include <fstream>
@@ -26,23 +27,32 @@ int main(int argc, char** argv) {
     // TODO: Create a problem with buildings as obstacles
 
     // Get the problem
-    generateEnv obj;
-    KinodynamicProblem2D prob = obj.getEnv1();
-    Visualizer::makeFigure(prob);
+    // generateEnv obj;
+    // KinodynamicProblem2D prob = obj.getEnv1();
+    // Visualizer::makeFigure(prob);
 
-    // Find a path in the new environment
-    MyKinoRRT kino_planner_test;
-    KinoPath path = kino_planner_test.plan(prob, *agentFactory[prob.agent_type]());
+    // // Find a path in the new environment
+    // MyKinoRRT kino_planner_test;
+    // KinoPath path = kino_planner_test.plan(prob, *agentFactory[prob.agent_type]());
 
-    // Visualize the path
-    if (path.valid) {
-        Visualizer::makeFigure(prob, path, false); // Set to 'true' to render animation
-        //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
-    }
+    // // Visualize the path
+    // if (path.valid) {
+    //     Visualizer::makeFigure(prob, path, false); // Set to 'true' to render animation
+    //     //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
+    // }
 
     // Get a regular 2D problem
+    generateEnv obj;
     Problem2D prob2D = obj.getEnvRand();
     Visualizer::makeFigure(prob2D);
+
+    // Use RRT to find a path
+    MyRRT rrt;
+    Path2D path2D = rrt.plan(prob2D);
+    std::map<amp::Node, Eigen::Vector2d> rrt_nodes = rrt.getNodes();
+    std::shared_ptr<amp::Graph<double>> rrt_graph = rrt.getGraph();
+    Visualizer::makeFigure(prob2D, path2D, *rrt_graph, rrt_nodes);
+    std::cout << "RRT Path Length: " << path2D.length() << std::endl;
 
 
 

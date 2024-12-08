@@ -86,7 +86,7 @@ amp::Problem2D generateEnv::getEnvRand() {
         bool valid = false;
         int iterations = 0;
         while(!valid && iterations < max_iterations) {
-            obstacle = randomTreeObstacle(prob.x_min, prob.x_max, prob.y_min, prob.y_max, 0.4, 2.0);
+            obstacle = randomTreeObstacle(prob.x_min, prob.x_max, prob.y_min, prob.y_max, 0.4, 3.0);
             valid = isValidObstacle(obstacle, obstacle_vec, prob.q_init, prob.q_goal);
             iterations++;
         }
@@ -106,7 +106,6 @@ amp::Problem2D generateEnv::getEnvRand() {
 
     return prob;
 }
-
 
 
 // @brief Create a new candidate tree obstacle
@@ -151,4 +150,28 @@ amp::Obstacle2D generateEnv::createObstacle(const TreeObstacle& obstacle) {
     // Create the obstacle
     amp::Obstacle2D obs(vertices);
     return obs;
+}
+
+
+// @brief Given an overall problem definition, create a subproblem to adaptively plan around obstacles
+amp::Problem2D generateEnv::createSubproblem(const amp::Problem2D& problem, const Eigen::Vector2d& q_curr, const Eigen::Vector2d& q_intermediateGoal, const rangeFindingCar& agent) {
+    // Create the subproblem
+    amp::Problem2D subproblem = problem;
+    subproblem.q_init = q_curr;
+    subproblem.q_goal = q_intermediateGoal;
+
+    // Get the obstacles that are within the range finder of the agent
+    std::vector<amp::Obstacle2D> new_obstacles;
+    for(const auto& obs : problem.obstacles) {
+        // Check if the obstacle is within the range finder
+        Eigen::Vector2d closest_point;
+        if(distanceToObstacle(q_curr, obs, closest_point) < agent.agent_prop.radius) {
+            new_obstacles.push_back(obs);
+        }
+    }
+
+    // Set the new obstacles
+    subproblem.obstacles = new_obstacles;
+
+    return subproblem;
 }

@@ -33,6 +33,7 @@ namespace amp{
     bool inCollision(const amp::KinodynamicProblem2D& problem, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos);
     bool inCollision(const amp::Problem2D& problem, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos);
     bool inCollision(const amp::Problem2D& problem, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos, int& collision_index, amp::Obstacle2D& collision_obstacle);
+    bool inCollision(const std::vector<amp::Obstacle2D>& obstacles, Eigen::Vector2d current_pos, Eigen::Vector2d next_pos);
     bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2);
     bool onSegment(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r);
     int orientation(Eigen::Vector2d p, Eigen::Vector2d q, Eigen::Vector2d r); 
