@@ -1,0 +1,43 @@
+clc;
+clear;
+close all;
+
+filename = 'adaptive.txt';
+[x_values,y_values] = extractPath(filename);
+[divergence_index] = findDivergencePoint(x_values,y_values);
+q_init = [x_values{1}(1),y_values{1}(1)];
+q_goal = [x_values{end}(end),y_values{end}(end)];
+
+
+
+
+
+
+%% Animate Trajectory
+start_index = 1; 
+figure(1);
+set(gcf, 'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+% Add labels and title for clarity
+xlabel('X');
+ylabel('Y');
+
+hold on;
+% Plot the obstacles once and retain them
+plotObstacles('obstacles.txt');
+scatter(x(1), y(1), marker_size, 'filled', 'Tag', 'state');
+scatter(x(1), y(1), marker_size, 'filled', 'Tag', 'state');
+% Loop to plot and update the paths
+for i = 1:length(x_values)
+    % Find and delete only the existing path (if any)
+    existing_path = findobj('Tag', 'Path');
+    delete(existing_path);
+    % Plot the current path with a specific tag
+    path_plot = plot(x_values{i}, y_values{i}, 'LineWidth', 3, 'Tag', 'Path','Color','blue');
+    propagateAgent(x_values{i},y_values{i},start_index,divergence_index(i))
+    start_index = divergence_index(i);
+    title(['Path ', num2str(i)]);
+    % Pause for 1 second
+    %pause(1);
+    drawnow;
+end
+propagateAgent(x_values{i},y_values{i},start_index,length(x_values{end}));
