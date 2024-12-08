@@ -19,13 +19,15 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     if(!rrt_init.getSuccess()) {
         std::cout << "Initial path not found, returning empty path" << std::endl;
         return path_init;
+    } else {
+        std::cout << "Initial path found, moving along trajectory..." << std::endl;
     }
 
     // Take steps along the path and at each step, check if any obstacles intersect the path
     std::vector<Eigen::Vector2d> current_waypoints = path_init.waypoints;
     Eigen::Vector2d q_curr = problem.q_init;
     int curr_index = 0;
-    int intermediate_goal_index = curr_index + 20;
+    int intermediate_goal_index = curr_index + 20;  // Heuristic lookahead value
 
     // Take steps along the path until we get to the goal
     while(curr_index < current_waypoints.size() - 1) {
@@ -35,7 +37,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
 
         // Check if any of the obstacles within the range finder intersect the path
         if(waypointsIntersectObstacles(new_waypoints, new_obstacles)) {
-            std::cout << "Obstacles intersect the path, recalculating new path" << std::endl;
+            std::cout << "Obstacles intersect the path at node " << curr_index << ", recalculating new path" << std::endl;
 
             // Get new goal location from a heuristic look ahead
             Eigen::Vector2d new_goal;
@@ -62,17 +64,13 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
             // Replace the path in collision with the new subpath
             current_waypoints.erase(current_waypoints.begin() + curr_index, current_waypoints.begin() + intermediate_goal_index);
             current_waypoints.insert(current_waypoints.begin() + curr_index, path_new.waypoints.begin(), path_new.waypoints.end());
-
-            // Update the current position
-            curr_index++;
-            intermediate_goal_index = curr_index + 20;
-            q_curr = current_waypoints[curr_index];
-        } else {
-            // No collision, update the current position
-            curr_index++;
-            intermediate_goal_index = curr_index + 20;
-            q_curr = current_waypoints[curr_index];
         }
+
+        // Move forward
+        curr_index++;
+        intermediate_goal_index = curr_index + 20;
+        q_curr = current_waypoints[curr_index];
+        std::cout << "Moving to new waypoint: " << curr_index << std::endl;
     }
 
     // Create the final path using the current waypoints
@@ -89,7 +87,7 @@ std::vector<amp::Obstacle2D> adaptiveRRT::getObstaclesInRange(const amp::Problem
     for(const auto& obs : problem.obstacles) {
         // Check if the obstacle is within the range finder
         Eigen::Vector2d closest_point;
-        if(distanceToObstacle(q_curr, obs, closest_point) < agent.agent_prop.radius) {
+        if(amp::distanceToObstacle(q_curr, obs, closest_point) < agent.agent_prop.radius) {
             new_obstacles.push_back(obs);
         }
     }

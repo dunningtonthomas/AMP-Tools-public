@@ -5,6 +5,7 @@
 #include "MyKinoRRT.h"
 #include "MyRRT.h"
 #include "createEnv.h"
+#include "guidance.h"
 #include <chrono>
 #include <fstream>
 #include <cmath>
@@ -54,6 +55,12 @@ int main(int argc, char** argv) {
     Visualizer::makeFigure(prob2D, path2D, *rrt_graph, rrt_nodes);
     std::cout << "RRT Path Length: " << path2D.length() << std::endl;
 
+    // Use adaptive RRT to find a path
+    rangeFindingCar agent;
+    adaptiveRRT adaptive_rrt;
+    Path2D adaptive_path = adaptive_rrt.plan(prob2D, agent);
+    Visualizer::makeFigure(prob2D, adaptive_path);
+    std::cout << "Adaptive RRT Path Length: " << adaptive_path.length() << std::endl;
 
 
     // MyKinoRRT kino_planner;
