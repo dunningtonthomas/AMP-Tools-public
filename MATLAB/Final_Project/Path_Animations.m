@@ -30,20 +30,12 @@ obstacles = plotObstacles('obstacles.txt');
 sensing_radius = 10; % Define sensing radius for the agent
 % Loop to plot and update the paths
 for i = 1:length(x_values)
-    % Update the title dynamically
-    title(['Path ', num2str(i)]);
-    % Find and delete only the existing path (if any)
-    existing_path = findobj('Tag', 'Path');
-    delete(existing_path);
-
     % Plot the current path with a specific tag
     if i==1
         % Plot the start and end goals
         scatter(q_init(1), q_init(2), marker_size, 'filled', 'MarkerFaceColor', 'b', 'MarkerEdgeColor', 'b');
         scatter(q_goal(1), q_goal(2), marker_size, 'filled', 'MarkerFaceColor', 'b', 'MarkerEdgeColor', 'b');
     end
-    path_plot = plot(x_values{i}, y_values{i}, 'LineWidth', 3, 'Tag', 'Path', 'Color', 'blue');
-    
     % Propagate the agent along the current path
     propagateAgent(x_values{i}, y_values{i}, start_index, divergence_index(i), obstacles, sensing_radius);
     

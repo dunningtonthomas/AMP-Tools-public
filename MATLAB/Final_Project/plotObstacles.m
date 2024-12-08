@@ -18,6 +18,6 @@ function obstacles = plotObstacles(filename)
     for i = 1:length(radii)
         x_circle = x_centers(i) + radii(i) * cos(theta);
         y_circle = y_centers(i) + radii(i) * sin(theta);
-        fill(x_circle, y_circle, 'r', 'EdgeColor', 'none', 'FaceAlpha', 1, 'Tag', ['obstacle_', num2str(i)]);
+        fill(x_circle, y_circle, 'black', 'EdgeColor', 'none', 'FaceAlpha', 1, 'Tag', ['obstacle_', num2str(i)]);
     end
 end
