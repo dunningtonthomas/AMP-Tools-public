@@ -23,27 +23,28 @@ std::unordered_map<AgentType, std::function<std::shared_ptr<amp::DynamicAgent>()
 
 int main(int argc, char** argv) {
     // Create the problem
-    //KinodynamicProblem2D prob;
-    //KinodynamicProblem2D prob = problems[0];
-    // TODO: Create a problem with buildings as obstacles
+    rangeFindingCar agent;
+    generateEnv obj;
+    KinodynamicProblem2D prob = obj.getEnvRandKino();
 
-    // Get the problem
-    // generateEnv obj;
-    // KinodynamicProblem2D prob = obj.getEnv1();
-    // Visualizer::makeFigure(prob);
-
-    // // Find a path in the new environment
+    // Find a path in the new environment
     // MyKinoRRT kino_planner_test;
     // KinoPath path = kino_planner_test.plan(prob, *agentFactory[prob.agent_type]());
 
-    // // Visualize the path
-    // if (path.valid) {
-    //     Visualizer::makeFigure(prob, path, false); // Set to 'true' to render animation
-    //     //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
-    // }
+    // Use the guidance level to plan
+    adaptiveRRT adaptive_rrt_kino;
+    KinoPath adaptive_path_kino = adaptive_rrt_kino.plan(prob, agent);
 
+    // // Visualize the path
+    if (adaptive_path_kino.valid) {
+        Visualizer::makeFigure(prob, adaptive_path_kino, false); // Set to 'true' to render animation
+        //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
+    }
+
+
+    // REGULAR RRT
+    /*
     // Get a regular 2D problem
-    generateEnv obj;
     Problem2D prob2D = obj.getEnvRand();
     Visualizer::makeFigure(prob2D);
 
@@ -56,7 +57,6 @@ int main(int argc, char** argv) {
     std::cout << "RRT Path Length: " << path2D.length() << std::endl;
 
     // Use adaptive RRT to find a path
-    rangeFindingCar agent;
     adaptiveRRT adaptive_rrt;
     Path2D adaptive_path = adaptive_rrt.plan(prob2D, agent);
     Visualizer::makeFigure(prob2D, adaptive_path);
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
     //     }
     // }
     // data_file.close();
-
+    */
 
     Visualizer::showFigures();
     return 0;

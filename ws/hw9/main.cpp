@@ -20,9 +20,10 @@ std::unordered_map<AgentType, std::function<std::shared_ptr<amp::DynamicAgent>()
 
 int main(int argc, char** argv) {
     // Select problem, plan, check, and visualize
-    bool benchmark = true;
-    int select = 6;
+    bool benchmark = false;
+    int select = 0;
     KinodynamicProblem2D prob = problems[select];
+    Visualizer::makeFigure(prob);
 
     // Hardcode the control bounds if it is the car problem
     if(select == 7 || select == 6) {

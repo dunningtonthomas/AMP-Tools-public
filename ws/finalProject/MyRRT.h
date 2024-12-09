@@ -16,7 +16,7 @@
 class MyRRT : public amp::GoalBiasRRT2D {
     public:
         // Default constructor
-        MyRRT() : step_size(1.0), goal_bias(0.05), max_iterations(10000), epsilon(2.0), success(false) {}
+        MyRRT() : step_size(0.5), goal_bias(0.05), max_iterations(10000), epsilon(1.0), success(false) {}
 
         // constructor to populate step_size, goal_bias, max_iterations, and epsilon
         MyRRT(double r, double p, int n, double e) : step_size(r), goal_bias(p), max_iterations(n), epsilon(e), success(false) {}
