@@ -5,18 +5,23 @@
 // @brief Planning algorithm, returns a valid path using the range finder for planning
 amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingCar& agent) {
     // Write waypoints to a file
-    std::ofstream data_file;
+    std::ofstream data_file, flag_file;
     data_file.open("../../file_dump/adaptive.txt");
+    flag_file.open("../../file_dump/adaptive_flag.txt");
 
     // Check if the file opened correctly
-    if (!data_file.is_open()) {
+    if (!data_file.is_open() || !flag_file.is_open()) {
         std::cerr << "Error opening file" << std::endl;
     } else {
         std::cout << "File opened successfully" << std::endl;
     }
     
     // Overall path found boolean
+    amp::Path2D final_path;
     bool path_found = false;
+
+    // Path propagation lookahead value
+    int path_propagation_value = 4;
     
     // Get the subproblem
     generateEnv sub;
@@ -38,7 +43,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     std::vector<Eigen::Vector2d> current_waypoints = path_init.waypoints;
     Eigen::Vector2d q_curr = problem.q_init;
     int curr_index = 0;
-    int intermediate_goal_index = curr_index + 10;  // Heuristic lookahead value
+    int intermediate_goal_index = curr_index + 20;  // Heuristic lookahead value
 
     // Write initial waypoints to a file
     writeWaypointsToFile(current_waypoints, data_file);
@@ -51,23 +56,37 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
 
         // Check if any of the obstacles within the range finder intersect the path
         if(waypointsIntersectObstacles(new_waypoints, new_obstacles)) {
-            std::cout << "Obstacles intersect the path at node " << curr_index << ", recalculating new path" << std::endl;
+            std::cout << "Obstacles intersect the path at node " << curr_index << ", recalculating new path with lookahead " << path_propagation_value << std::endl;
+
+            // Write the flag to the file the current point where planning begins
+            flag_file << q_curr.x() << " " << q_curr.y() << std::endl;
+
+            // Path propagation, solve subproblem starting 2 ft (4 steps) ahead of the current index
+            int subproblem_start;
+            if(curr_index + path_propagation_value < current_waypoints.size()) {
+                subproblem_start = curr_index + path_propagation_value; //look-ahead
+                intermediate_goal_index = subproblem_start + 20;
+            } else {
+                subproblem_start = curr_index; //stop and calculate
+                intermediate_goal_index = current_waypoints.size() - 1;
+            }
 
             // Get new goal location from a heuristic look ahead
             Eigen::Vector2d new_goal;
-            if(intermediate_goal_index < current_waypoints.size()) {
-                new_goal = current_waypoints[intermediate_goal_index];
-            } else {
+            if(intermediate_goal_index >= current_waypoints.size()) {
                 intermediate_goal_index = current_waypoints.size() - 1;
-                new_goal = problem.q_goal;
             }
 
             // Create a new subproblem
-            amp::Problem2D new_subproblem = sub.createSubproblem(problem, q_curr, new_goal, agent);
+            amp::Problem2D new_subproblem = sub.createSubproblem(problem, current_waypoints[subproblem_start], current_waypoints[intermediate_goal_index], agent);
 
             // Create the RRT graph
             MyRRT rrt_new;
+            auto start_time = std::chrono::high_resolution_clock::now();
             amp::Path2D path_new = rrt_new.plan(new_subproblem);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed_time = end_time - start_time;
+            final_path.adaptive_times.push_back(elapsed_time.count());
 
             // Check if the path is valid, later you can make this into a loop and adjust the intermediate goal
             if(!rrt_new.getSuccess()) {
@@ -76,8 +95,8 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
             }
 
             // Replace the path in collision with the new subpath
-            current_waypoints.erase(current_waypoints.begin() + curr_index, current_waypoints.begin() + intermediate_goal_index);
-            current_waypoints.insert(current_waypoints.begin() + curr_index, path_new.waypoints.begin(), path_new.waypoints.end());
+            current_waypoints.erase(current_waypoints.begin() + subproblem_start, current_waypoints.begin() + intermediate_goal_index);
+            current_waypoints.insert(current_waypoints.begin() + subproblem_start, path_new.waypoints.begin(), path_new.waypoints.end());
 
             // Write the new waypoints to the file
             writeWaypointsToFile(current_waypoints, data_file);
@@ -91,11 +110,11 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     }
 
     // Create the final path using the current waypoints
-    amp::Path2D final_path;
     final_path.waypoints = current_waypoints;
 
     // Close the file
     data_file.close();
+    flag_file.close();
 
     return final_path;
 }

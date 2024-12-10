@@ -30,7 +30,14 @@ class rangeFindingCar {
         rangeFindingCar() {
             agent_prop.length = 0.0;
             agent_prop.width = 0.0;
-            agent_prop.radius = 3.0;
+            agent_prop.radius = 10.0;
+        }
+
+        // Input constructor
+        rangeFindingCar(double radius) {
+            agent_prop.length = 0.0;
+            agent_prop.width = 0.0;
+            agent_prop.radius = radius;
         }
 
         // Propagate the state forward according to dynamics model

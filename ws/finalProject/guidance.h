@@ -17,6 +17,7 @@
 // Include random library to get uniform sampling
 #include <random>
 #include <fstream>
+#include <chrono>
 
 // This class will implement the high level planner for the adaptive RRT
 class adaptiveRRT {
