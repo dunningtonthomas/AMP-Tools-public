@@ -38,7 +38,7 @@ for i = start_index:divergence_index
             % On the last iteration, check for path intersection
             if i == divergence_index
                 if checkPathIntersection(x(divergence_index:end), y(divergence_index:end), obstacle_center, obstacle_radius,sensing_radius)
-                    set(obstacle_handles(j), 'FaceColor', 'y'); % Highlight intersecting obstacle in yellow
+                    set(obstacle_handles(j), 'FaceColor', 'r'); % Highlight intersecting obstacle in yellow
                 else
                     set(obstacle_handles(j), 'FaceColor', 'g'); % Green for detected but no intersection
                 end
@@ -46,7 +46,7 @@ for i = start_index:divergence_index
                 set(obstacle_handles(j), 'FaceColor', 'g'); % Green for detected
             end
         else
-            set(obstacle_handles(j), 'FaceColor', 'r'); % Red for not detected
+            set(obstacle_handles(j), 'FaceColor', 'b'); % Red for not detected
         end
     end
 
