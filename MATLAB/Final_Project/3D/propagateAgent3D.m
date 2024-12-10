@@ -1,0 +1,56 @@
+function propagateAgent3D(x, y, z, start_index, divergence_index, obstacles, sensing_radius)
+figure(1);
+hold on;
+existing_path = findobj('Tag', 'projected_path');
+delete(existing_path);
+
+% Initialize obstacle handles
+obstacle_handles = gobjects(size(obstacles, 1), 1);
+for j = 1:size(obstacles, 1)
+    % Color obstacles red initially
+    obstacle_handles(j) = findobj('Tag', ['obstacle_', num2str(j)]);
+end
+
+% Initialize the agent as a scatter plot
+marker_size = 50;
+state = scatter3(x(start_index), y(start_index), z(start_index), marker_size, ...
+                 'filled', 'MarkerFaceColor', 'g', 'MarkerEdgeColor', 'black', 'Tag', 'state');
+
+% Initialize path plots
+path_plot = plot3(x(1:start_index), y(1:start_index), z(1:start_index), 'LineWidth', 2, 'Color', 'b', 'Tag', 'current_path');
+projected_plot = plot3(x(start_index:end), y(start_index:end), z(start_index:end), 'LineWidth', 2, 'Color', 'b', 'LineStyle', '--', 'Tag', 'projected_path');
+
+% Iterate through the path
+for i = start_index:divergence_index
+    % Update agent's position and path
+    set(state, 'XData', x(i), 'YData', y(i), 'ZData', z(i));
+    set(path_plot, 'XData', x(1:i), 'YData', y(1:i), 'ZData', z(1:i));
+    set(projected_plot, 'XData', x(i:end), 'YData', y(i:end), 'ZData', z(i:end));
+
+    % Update obstacles' colors based on proximity
+    for j = 1:size(obstacles, 1)
+        obstacle_center = obstacles(j, 1:2); % Center of the obstacle
+        obstacle_radius = obstacles(j, 3); % Radius of the obstacle
+        distance_to_agent = norm([x(i), y(i)] - obstacle_center);
+
+        % Check if within sensing radius
+        if distance_to_agent-obstacle_radius <= sensing_radius
+            % On the last iteration, check for path intersection
+            if i == divergence_index
+                if checkPathIntersection(x(divergence_index:end), y(divergence_index:end), obstacle_center, obstacle_radius,sensing_radius)
+                    set(obstacle_handles(j), 'FaceColor', 'y'); % Highlight intersecting obstacle in yellow
+                else
+                    set(obstacle_handles(j), 'FaceColor', 'g'); % Green for detected but no intersection
+                end
+            else
+                set(obstacle_handles(j), 'FaceColor', 'g'); % Green for detected
+            end
+        else
+            set(obstacle_handles(j), 'FaceColor', 'r'); % Red for not detected
+        end
+    end
+
+    % Pause for animation
+    pause(0.2);
+end
+end

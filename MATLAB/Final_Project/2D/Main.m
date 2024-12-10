@@ -3,6 +3,7 @@ clear;
 close all;
 
 filename = 'adaptive.txt';
+%filename = 'small.txt';
 [x_values,y_values] = extractPath(filename);
 [divergence_index] = findDivergencePoint(x_values,y_values);
 q_init = [x_values{1}(1),y_values{1}(1)];
@@ -26,6 +27,7 @@ ylim([-5 120]);
 title(['Path ', num2str(1)]);
 pause(1)
 % Plot obstacles and get their data
+%obstacles = plotObstacles('obstacles.txt');
 obstacles = plotObstacles('obstacles.txt');
 sensing_radius = 10; % Define sensing radius for the agent
 % Loop to plot and update the paths

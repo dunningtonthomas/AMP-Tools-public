@@ -1,0 +1,28 @@
+clc;
+clear;
+close all;
+
+% Load paths
+filename = 'adaptive.txt';
+[x_values, y_values] = extractPath(filename);
+for i = length(x_values)
+    z_values = zeros(size(x_values)); % Add a Z-dimension with constant 0
+end
+% Initialize figure
+figure(1);
+hold on;
+set(gcf, 'Units', 'normalized', 'OuterPosition', [0 0 1 1]);
+xlabel('X');
+ylabel('Y');
+zlabel('Z');
+axis equal;
+grid on;
+
+% Plot obstacles and animate the trajectory
+obstacles = plotObstacles3D('obstacles.txt');
+sensing_radius = 10; % Define sensing radius
+
+% Loop through paths and propagate the agent
+for i = 1:length(x_values)
+    propagateAgent3D(x_values{i}, y_values{i}, z_values{i}, start_index, divergence_index(i), obstacles, sensing_radius);
+end
