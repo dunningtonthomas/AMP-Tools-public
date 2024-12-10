@@ -38,35 +38,9 @@ amp::KinodynamicProblem2D generateEnv::getEnv1() {
 }
 
 amp::KinodynamicProblem2D generateEnv::getEnvRandKino() {
-    amp::KinodynamicProblem2D prob;
-    prob.agent_type = amp::AgentType::SingleIntegrator;
-    prob.isPointAgent = true;
-    prob.q_init = Eigen::Vector2d(5.0, 5.0);
-    prob.q_goal = {std::make_pair(290.0, 310.0), std::make_pair(290.0, 310.0)};
-    prob.q_bounds = {std::make_pair(0.0, 400.0), std::make_pair(0.0, 400.0)};
-    prob.u_bounds = {std::make_pair(-1.0, 1.0), std::make_pair(-1.0, 1.0)};
-    prob.isDimCartesian = {true, true};
-
-    // Set the environment bounds
-    prob.x_min = 0.0;
-    prob.x_max = 50.0;
-    prob.y_min = 0.0;
-    prob.y_max = 50.0;
-
-    // Setup obstacles
-    std::vector<Eigen::Vector2d> obstacle_vertices = {{33.0, 33.0}, {66.0, 33.0}, {66.0, 66.0}, {33.0, 66.0}};
-    amp::Obstacle2D obstacle1(obstacle_vertices);
-    obstacle_vertices = {{70.0, 100.0}, {130.0, 100.0}, {130.0, 130.0}, {70.0, 130.0}};
-
-
-    return prob;
-}
-
-// @brief This function will create a random environment for a regular 2D problem for RRT
-amp::Problem2D generateEnv::getEnvRand() {
     // Write obstacle locations to a file
     std::ofstream data_file;
-    data_file.open("../../file_dump/obstacles.txt");
+    data_file.open("../../file_dump/obstaclesKino.txt");
 
     // Check if the file opened correctly
     if (!data_file.is_open()) {
@@ -75,10 +49,21 @@ amp::Problem2D generateEnv::getEnvRand() {
         std::cout << "File opened successfully" << std::endl;
     }
 
-    // Create the problem
-    amp::Problem2D prob;
-    prob.q_init = Eigen::Vector2d(5.0, 5.0);
-    prob.q_goal = Eigen::Vector2d(95.0, 95.0);
+    // Agent Initialization
+    Eigen::VectorXd q_init = Eigen::VectorXd::Zero(5);
+    q_init << 0.0, 0.0, 0.0;
+    amp::KinodynamicProblem2D prob;
+    prob.isPointAgent = true;
+    prob.agent_type = amp::AgentType::FirstOrderUnicycle;
+    prob.q_init = q_init;
+    //prob.q_goal = {std::make_pair(92.0, 98.0), std::make_pair(92.0, 98.0), std::make_pair(-M_PI, M_PI)};
+    prob.q_goal = {std::make_pair(92.0, 98.0), std::make_pair(92.0, 98.0), std::make_pair(-M_PI, M_PI)};
+    prob.q_bounds = {std::make_pair(0.0, 100.0), std::make_pair(0.0, 100.0), std::make_pair(-M_PI, M_PI)};
+    prob.u_bounds = {std::make_pair(-2.0, 4.0), std::make_pair(-1.5, 1.5)};
+    prob.isDimCartesian = {true, true, false};
+    prob.agent_dim = {1.0, 0.4};
+    
+    // Problem bounds
     prob.x_min = 0.0;
     prob.x_max = 100.0;
     prob.y_min = 0.0;
@@ -98,6 +83,68 @@ amp::Problem2D generateEnv::getEnvRand() {
         int iterations = 0;
         while(!valid && iterations < max_iterations) {
             obstacle = randomTreeObstacle(prob.x_min, prob.x_max, prob.y_min, prob.y_max, 0.4, 3.0);
+            valid = isValidObstacle(obstacle, obstacle_vec, prob.q_init, Eigen::Vector2d(95.0, 95.0));
+            iterations++;
+        }
+
+        // If the obstacle is valid, add it to the vector
+        if(valid) {
+            // Add the obstacle to the vector
+            obstacle_vec.push_back(obstacle);
+
+            // Write the obstacle to the file
+            data_file << obstacle.center.x() << " " << obstacle.center.y() << " " << obstacle.radius << std::endl;
+
+            // Create the obstacle with vertices
+            amp::Obstacle2D obstacle_final = createObstacle(obstacle);
+
+            // Add the obstacle to the vector
+            prob.obstacles.push_back(obstacle_final);
+        }
+    }
+
+    data_file.close();
+
+    return prob;   
+}
+
+// @brief This function will create a random environment for a regular 2D problem for RRT
+amp::Problem2D generateEnv::getEnvRand() {
+    // Write obstacle locations to a file
+    std::ofstream data_file;
+    data_file.open("../../file_dump/obstacles.txt");
+
+    // Check if the file opened correctly
+    if (!data_file.is_open()) {
+        std::cerr << "Error opening file" << std::endl;
+    } else {
+        std::cout << "File opened successfully" << std::endl;
+    }
+
+    // Create the problem
+    amp::Problem2D prob;
+    prob.q_init = Eigen::Vector2d(5.0, 5.0);
+    //prob.q_goal = Eigen::Vector2d(95.0, 95.0);
+    prob.q_goal = Eigen::Vector2d(25.0, 25.0);
+    prob.x_min = 0.0;
+    prob.x_max = 28.0;
+    prob.y_min = 0.0;
+    prob.y_max = 28.0;
+
+    // Create a vector of obstacles, each obstacle has a coordinate and a radius
+    int num_obstacles = 100;
+    std::vector<amp::Obstacle2D> obstacles;
+    std::vector<TreeObstacle> obstacle_vec;
+
+    // Loop through and create random obstacles
+    int max_iterations = 1000;
+    for(int i = 0; i < num_obstacles; i++) {
+        // Get a random tree obstacle
+        TreeObstacle obstacle;
+        bool valid = false;
+        int iterations = 0;
+        while(!valid && iterations < max_iterations) {
+            obstacle = randomTreeObstacle(prob.x_min, prob.x_max, prob.y_min, prob.y_max, 0.1, 1.3);
             valid = isValidObstacle(obstacle, obstacle_vec, prob.q_init, prob.q_goal);
             iterations++;
         }
@@ -172,6 +219,30 @@ amp::Obstacle2D generateEnv::createObstacle(const TreeObstacle& obstacle) {
 amp::Problem2D generateEnv::createSubproblem(const amp::Problem2D& problem, const Eigen::Vector2d& q_curr, const Eigen::Vector2d& q_intermediateGoal, const rangeFindingCar& agent) {
     // Create the subproblem
     amp::Problem2D subproblem = problem;
+    subproblem.q_init = q_curr;
+    subproblem.q_goal = q_intermediateGoal;
+
+    // Get the obstacles that are within the range finder of the agent
+    std::vector<amp::Obstacle2D> new_obstacles;
+    for(const auto& obs : problem.obstacles) {
+        // Check if the obstacle is within the range finder
+        Eigen::Vector2d closest_point;
+        if(distanceToObstacle(q_curr, obs, closest_point) < agent.agent_prop.radius) {
+            new_obstacles.push_back(obs);
+        }
+    }
+
+    // Set the new obstacles
+    subproblem.obstacles = new_obstacles;
+
+    return subproblem;
+}
+
+
+// @brief Given an overall problem definition, create a subproblem to adaptively plan around obstacles
+amp::KinodynamicProblem2D generateEnv::createSubproblem(const amp::KinodynamicProblem2D& problem, const Eigen::VectorXd& q_curr, const std::vector<std::pair<double, double>> q_intermediateGoal, const rangeFindingCar& agent) {
+    // Create the subproblem
+    amp::KinodynamicProblem2D subproblem = problem;
     subproblem.q_init = q_curr;
     subproblem.q_goal = q_intermediateGoal;
 

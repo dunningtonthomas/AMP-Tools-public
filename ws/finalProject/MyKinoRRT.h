@@ -12,7 +12,7 @@
 class MyKinoRRT : public amp::KinodynamicRRT {
     public:
         // Default constructor
-        MyKinoRRT() : goal_bias(0.05), max_iterations(50000), success(false), dt(0.3), u_samples(15) {}
+        MyKinoRRT() : goal_bias(0.05), max_iterations(50000), success(false), dt(1.0), u_samples(5) {}
 
         // Inputs constructor
         MyKinoRRT(int u_samples) : goal_bias(0.05), max_iterations(50000), success(false), dt(0.3), u_samples(u_samples) {}
@@ -53,6 +53,8 @@ class MyKinoRRT : public amp::KinodynamicRRT {
         // @brief check if the car robot is in collision with an obstacle
         bool polygonPolygonCollision(const amp::KinodynamicProblem2D& problem, const amp::Obstacle2D& obstacle, const Eigen::VectorXd& agent_configuration);
 
+        // Return success variable
+        bool getSuccess() { return success; }
     private:
         // RRT Hyperparameters
         double goal_bias;

@@ -43,12 +43,6 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
     // Set the dimensions of the agent
     agent.agent_dim.length = problem.agent_dim.length;
     agent.agent_dim.width = problem.agent_dim.width;
-    
-    // Output the control bounds
-    std::cout << "Control 1 Bounds: " << problem.u_bounds[0].first << " " << problem.u_bounds[0].second << std::endl;
-    std::cout << "Control 2 Bounds: " << problem.u_bounds[1].first << " " << problem.u_bounds[1].second << std::endl;
-    std::cout << "Agent Dimensions: " << agent.agent_dim.length << " " << agent.agent_dim.width << std::endl;
-
 
     // Add the initial state
     //path.waypoints.push_back(state);
@@ -88,14 +82,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem, amp::Dyn
             // Check if the new node is close enough to the goal
             if(isSystemInGoal(problem, q_new)) {
                 std::cout << "RRT Path found in "<< iteration << " iterations, reconstructing path..." << std::endl;
-
-
-                int i = 0;
-                for(const auto& goal : problem.q_goal) {
-                    std::cout << "Goal " << i << " Bounds: " << goal.first << " " << goal.second << std::endl;
-                    std::cout << "Final State " << i << ": " << q_new(i) << std::endl << std::endl;
-                    i++;
-                }
+                success = true;
 
                 // Reconstruct the path
                 amp::Node final_node = nodes.size() - 1;

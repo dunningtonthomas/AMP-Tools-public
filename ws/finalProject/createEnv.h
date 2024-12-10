@@ -8,6 +8,7 @@
 
 // Include helper functions
 #include "helperFuncs.h"
+#include <cmath>
 
 // Structure for the tree obstacle
 struct TreeObstacle {
@@ -29,7 +30,7 @@ class rangeFindingCar {
         rangeFindingCar() {
             agent_prop.length = 0.0;
             agent_prop.width = 0.0;
-            agent_prop.radius = 5.0;
+            agent_prop.radius = 3.0;
         }
 
         // Propagate the state forward according to dynamics model
@@ -48,6 +49,7 @@ class generateEnv {
 
         // @brief Given an overall problem definition, create a subproblem to adaptively plan around obstacles
         amp::Problem2D createSubproblem(const amp::Problem2D& problem, const Eigen::Vector2d& q_curr, const Eigen::Vector2d& q_intermediateGoal, const rangeFindingCar& agent);
+        amp::KinodynamicProblem2D createSubproblem(const amp::KinodynamicProblem2D& problem, const Eigen::VectorXd& q_curr, const std::vector<std::pair<double, double>> q_intermediateGoal, const rangeFindingCar& agent);
 
         // @brief Create a random tree obstacle
         TreeObstacle randomTreeObstacle(double x_min, double x_max, double y_min, double y_max, double min_radius, double max_radius);
