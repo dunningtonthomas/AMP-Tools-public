@@ -4,7 +4,7 @@
 // @brief Implement path smoothing by removing unnecessary waypoints
 void MyRRT::pathSmoothing(amp::Path2D& path, const amp::Problem2D& problem) {
     // Smooth 100 times
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < 50; i++) {
         // return if the path is too short
         if(path.waypoints.size() < 3) {
             return;

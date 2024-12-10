@@ -11,6 +11,7 @@ namespace amp {
 struct Path2D {
     Path2D() = default;
     std::vector<Eigen::Vector2d> waypoints;
+    std::vector<double> adaptive_times;
 
     /// @brief `true` if a solution was found, `false` otherwise
     bool valid;

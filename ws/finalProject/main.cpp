@@ -26,41 +26,56 @@ int main(int argc, char** argv) {
     rangeFindingCar agent;
     generateEnv obj;
     KinodynamicProblem2D prob = obj.getEnvRandKino();
+    bool benchmark_RRT = true;
 
     // Find a path in the new environment
     // MyKinoRRT kino_planner_test;
     // KinoPath path = kino_planner_test.plan(prob, *agentFactory[prob.agent_type]());
 
     // Use the guidance level to plan
-    adaptiveRRT adaptive_rrt_kino;
-    KinoPath adaptive_path_kino = adaptive_rrt_kino.plan(prob, agent);
+    // adaptiveRRT adaptive_rrt_kino;
+    // KinoPath adaptive_path_kino = adaptive_rrt_kino.plan(prob, agent);
 
-    // // Visualize the path
-    if (adaptive_path_kino.valid) {
-        Visualizer::makeFigure(prob, adaptive_path_kino, false); // Set to 'true' to render animation
-        //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
-    }
+    // // // Visualize the path
+    // if (adaptive_path_kino.valid) {
+    //     Visualizer::makeFigure(prob, adaptive_path_kino, false); // Set to 'true' to render animation
+    //     //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
+    // }
 
 
     // REGULAR RRT
-    /*
     // Get a regular 2D problem
     Problem2D prob2D = obj.getEnvRand();
-    Visualizer::makeFigure(prob2D);
-
-    // Use RRT to find a path
-    MyRRT rrt;
-    Path2D path2D = rrt.plan(prob2D);
-    std::map<amp::Node, Eigen::Vector2d> rrt_nodes = rrt.getNodes();
-    std::shared_ptr<amp::Graph<double>> rrt_graph = rrt.getGraph();
-    Visualizer::makeFigure(prob2D, path2D, *rrt_graph, rrt_nodes);
-    std::cout << "RRT Path Length: " << path2D.length() << std::endl;
+    rangeFindingCar agent_basic(5.0);
+    //Visualizer::makeFigure(prob2D);
 
     // Use adaptive RRT to find a path
     adaptiveRRT adaptive_rrt;
-    Path2D adaptive_path = adaptive_rrt.plan(prob2D, agent);
+    Path2D adaptive_path = adaptive_rrt.plan(prob2D, agent_basic);
     Visualizer::makeFigure(prob2D, adaptive_path);
-    std::cout << "Adaptive RRT Path Length: " << adaptive_path.length() << std::endl;
+    //std::cout << "Adaptive RRT Path Length: " << adaptive_path.length() << std::endl;
+    // Output the adaptive times
+    std::cout << "Adaptive RRT Times: " << std::endl;
+    for(int i = 0; i < adaptive_path.adaptive_times.size(); i++) {
+        std::cout << adaptive_path.adaptive_times[i] << std::endl;
+    }
+
+    // Benchmark the RRT algorithm and write times to a file
+    if(benchmark_RRT) {
+        std::cout << "Benchmarking RRT" << std::endl;
+        std::ofstream time_file;
+        time_file.open("../../file_dump/adaptive_times.txt");
+        int num_bench = 1000;
+        for(int i = 0; i < num_bench; i++) {
+            adaptiveRRT adaptive_rrt_bench;
+            Path2D adaptive_path_bench = adaptive_rrt_bench.plan(prob2D, agent_basic);
+            for(int j = 0; j < adaptive_path_bench.adaptive_times.size(); j++) {
+                time_file << adaptive_path_bench.adaptive_times[j] << " ";
+            }   
+            time_file << std::endl;
+        }
+        time_file.close();
+    }
 
 
     // MyKinoRRT kino_planner;
@@ -91,7 +106,7 @@ int main(int argc, char** argv) {
     //     }
     // }
     // data_file.close();
-    */
+
 
     Visualizer::showFigures();
     return 0;
