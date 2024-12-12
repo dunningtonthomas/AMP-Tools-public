@@ -23,6 +23,21 @@ All scripts for the animation code are in the MATLAB directory and include 2D an
  - `MATLAB/Final_Project/TimePlots`: Benchmarking results.
  - `MATLAB/Plots`: Static plots of offline, online, and dynamic online implementations.
 
+## Running The Code
+
+### Motion Planner
+
+Use the following to compile and run the planner. 
+
+```
+bash build_and_run.sh finalProject
+```
+
+### Simulations
+
+There are a few MATLAB files to generate the animations but the main script in `MATLAB/Animations/2D` can be run in MATLAB to generate an animation of a sample trajectory.
+
+
 <!-- \
 # AMP-Tools
 ### Professor: Morteza Lahijanian
