@@ -14,11 +14,12 @@ planning_points(end+1, :) = [x{end}(end), y{end}(end)];
 % Load Obstacles
 obstacles = load('Data/PathRecalc2_3/obstacles_8.txt');
 
+
 % Load Intermediate Goal Index
-intGoal_idex = load('Data/PathRecalc2_3/adaptive_goalIndex_8.txt');
-intGoal_idex = intGoal_idex+1;
-intGoal_idex = [0;intGoal_idex];
-intGoal_idex(end+1) = length(x{end});
+intGoal_index = load('Data/PathRecalc2_3/adaptive_goalIndex_8.txt');
+intGoal_index = intGoal_index+1;
+intGoal_index = [0;intGoal_index];
+intGoal_index(end+1) = length(x{end});
 % Find planning and divergence index
 planning_index = findPlanningPoint(planning_points, x, y);
 [divergence_index] = findDivergencePoint(x, y);
@@ -114,12 +115,12 @@ for i = 1:length(x)+1
         line_style = '-';
         plot(x{i}(1:planning_index(i-1)), y{i}(1:planning_index(i-1)), 'LineWidth', 2, 'Color', initial_path_color,'LineStyle', line_style, 'DisplayName', 'Path Traveled');
         % Plot New Path
-        new_index = find(x{i-1}(intGoal_idex(i)) ==x{i});
+        new_index = find(x{i-1}(intGoal_index(i)) ==x{i});
         plot(x{i}(planning_index(i-1):new_index), y{i}(planning_index(i-1):new_index), 'LineWidth', 2, ...
              'Color', replanned_path_color, ...
              'DisplayName', ['Replanned Projected Path ', num2str(i)]);
         % Plot Current Projected 
-        plot(x{i-1}(intGoal_idex(i):end), y{i-1}(intGoal_idex(i):end), 'LineWidth', 2,'LineStyle',':',...
+        plot(x{i-1}(intGoal_index(i):end), y{i-1}(intGoal_index(i):end), 'LineWidth', 2,'LineStyle',':',...
         'Color', 'b','DisplayName', 'Initial Projected Path');
     else
         % Plot Agent at the Goal with a Label
