@@ -1,3 +1,29 @@
+# ASEN 5254 Final Project
+### Professor: Morteza Lahijanian
+### Toolbox Developed by: Peter Amorese
+### Authors: Thomas Dunnington, Owen Craig
+
+We would like to thank Professor Lahijanian for his guidance and support with this project and throughout the semester.
+
+## Planning Code
+
+The main planning implementation code is included in the `ws/finalProject` directory. There are also relevant functions that are called from the `ws/shared` directory. The notable source code files are listed below.
+
+ - `main.cpp`: Main function that tests and benchmarks the planning algorithms. 
+ - `guidance.cpp`: The Adaptive RRT implementation. This is the high level guidance algorithm that uses the low level RRT to adapatively adjust the path if an obstacle is within the range-finder radius and intersects the planned path.
+ - `createEnv.cpp`: The randomized environment generation. The class implementation creates random forest environments.
+ - `MyRRT.cpp`: Low level goal-biased RRT planner.
+
+
+## Simulation Code
+
+All scripts for the animation code are in the MATLAB directory and include 2D and 3D animations that use csv files outputted by the planning algorithm.
+
+ - `MATLAB/Animations`: Includes all scripts to generate the 2D and 3D animations.
+ - `MATLAB/Final_Project/TimePlots`: Benchmarking results.
+ - `MATLAB/Plots`: Static plots of offline, online, and dynamic online implementations.
+
+<!-- \
 # AMP-Tools
 ### Professor: Morteza Lahijanian
 ### Developed by: Peter Amorese
@@ -184,3 +210,4 @@ I hope you enjoy this toolbox!
   (  "  )
    - - -
 ```
+-->
