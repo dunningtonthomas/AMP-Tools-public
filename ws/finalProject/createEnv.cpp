@@ -127,9 +127,9 @@ amp::Problem2D generateEnv::getEnvRand() {
     //prob.q_goal = Eigen::Vector2d(95.0, 95.0);
     prob.q_goal = Eigen::Vector2d(25.0, 25.0);
     prob.x_min = 0.0;
-    prob.x_max = 28.0;
+    prob.x_max = 30.0;
     prob.y_min = 0.0;
-    prob.y_max = 28.0;
+    prob.y_max = 30.0;
 
     // Create a vector of obstacles, each obstacle has a coordinate and a radius
     int num_obstacles = 100;
@@ -144,7 +144,7 @@ amp::Problem2D generateEnv::getEnvRand() {
         bool valid = false;
         int iterations = 0;
         while(!valid && iterations < max_iterations) {
-            obstacle = randomTreeObstacle(prob.x_min, prob.x_max, prob.y_min, prob.y_max, 0.1, 1.3);
+            obstacle = randomTreeObstacle(prob.x_min, prob.x_max, prob.y_min, prob.y_max, 0.5, 1.0);
             valid = isValidObstacle(obstacle, obstacle_vec, prob.q_init, prob.q_goal);
             iterations++;
         }
@@ -184,7 +184,7 @@ bool generateEnv::isValidObstacle(const TreeObstacle& obstacle, const std::vecto
     // Loop through all obstacles and check if the new obstacle is valid
     for(const auto& obs : obstacles) {
         double distance = (obstacle.center - obs.center).norm();
-        if(distance < obstacle.radius + obs.radius) {
+        if(distance < obstacle.radius + obs.radius + 0.5) {
             return false;
         }
     }

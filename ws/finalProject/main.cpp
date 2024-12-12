@@ -26,22 +26,9 @@ int main(int argc, char** argv) {
     rangeFindingCar agent;
     generateEnv obj;
     KinodynamicProblem2D prob = obj.getEnvRandKino();
-    bool benchmark_RRT = true;
-
-    // Find a path in the new environment
-    // MyKinoRRT kino_planner_test;
-    // KinoPath path = kino_planner_test.plan(prob, *agentFactory[prob.agent_type]());
-
-    // Use the guidance level to plan
-    // adaptiveRRT adaptive_rrt_kino;
-    // KinoPath adaptive_path_kino = adaptive_rrt_kino.plan(prob, agent);
-
-    // // // Visualize the path
-    // if (adaptive_path_kino.valid) {
-    //     Visualizer::makeFigure(prob, adaptive_path_kino, false); // Set to 'true' to render animation
-    //     //Visualizer::makeFigure(prob, path, true); // Set to 'true' to render animation
-    // }
-
+    bool benchmark_RRT = false;
+    bool find_two_replan = false;
+    bool benchmark_RRT_total = true;
 
     // REGULAR RRT
     // Get a regular 2D problem
@@ -60,18 +47,86 @@ int main(int argc, char** argv) {
         std::cout << adaptive_path.adaptive_times[i] << std::endl;
     }
 
+
+    // Get a path that has two replans
+    if(find_two_replan) {
+        int num_replans = 100;
+
+        for(int i = 0; i < num_replans; i++) {
+            // Get a regular 2D problem
+            Problem2D prob2D_replan = obj.getEnvRand();
+            rangeFindingCar agent_basic_replan(5.0);
+
+            // Use adaptive RRT to find a path
+            adaptiveRRT adaptive_rrt_replan;
+            Path2D adaptive_path_replan = adaptive_rrt_replan.plan(prob2D_replan, agent_basic_replan);
+
+            // See how many replans were needed
+            if(adaptive_path_replan.adaptive_times.size() == 6) {
+                // Break out of the loop
+                std::cout << "Two replans found" << std::endl;
+                break;
+            }
+        }
+    }
+
     // Benchmark the RRT algorithm and write times to a file
     if(benchmark_RRT) {
-        std::cout << "Benchmarking RRT" << std::endl;
+        std::cout << "Benchmarking Online RRT" << std::endl;
         std::ofstream time_file;
-        time_file.open("../../file_dump/adaptive_times.txt");
-        int num_bench = 1000;
+        time_file.open("../../file_dump/adaptive_times_online.txt");
+        // Check if the file opened correctly
+        if (!time_file.is_open()) {
+            std::cerr << "Error opening file" << std::endl;
+            return -1;
+        } else {
+            std::cout << "File opened successfully" << std::endl;
+        }
+        int num_bench = 100;
         for(int i = 0; i < num_bench; i++) {
             adaptiveRRT adaptive_rrt_bench;
             Path2D adaptive_path_bench = adaptive_rrt_bench.plan(prob2D, agent_basic);
             for(int j = 0; j < adaptive_path_bench.adaptive_times.size(); j++) {
                 time_file << adaptive_path_bench.adaptive_times[j] << " ";
             }   
+            time_file << std::endl;
+        }
+        time_file.close();
+    }
+
+    // Benchmark the RRT algorithm and write times to a file
+    if(benchmark_RRT_total) {
+        std::cout << "Benchmarking RRT Offline vs Online" << std::endl;
+        std::ofstream time_file;
+        time_file.open("../../file_dump/offline_online_times.txt");
+        // Check if the file opened correctly
+        if (!time_file.is_open()) {
+            std::cerr << "Error opening file" << std::endl;
+            return -1;
+        } else {
+            std::cout << "File opened successfully" << std::endl;
+        }
+
+        int num_bench = 1000;
+        for(int i = 0; i < num_bench; i++) {
+            // Get a regular 2D problem
+            Problem2D prob2D_bench = obj.getEnvRand();
+            MyRRT rrt_bench;
+            adaptiveRRT adaptive_rrt_bench;
+
+            // Time both RRT methods
+            auto start_time = std::chrono::high_resolution_clock::now();
+            Path2D rrt_path_bench = rrt_bench.plan(prob2D_bench);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed_time = end_time - start_time;
+            time_file << elapsed_time.count() << " ";
+
+            // Time the adaptive RRT method
+            start_time = std::chrono::high_resolution_clock::now();
+            Path2D adaptive_path_bench = adaptive_rrt_bench.plan(prob2D_bench, agent_basic);
+            end_time = std::chrono::high_resolution_clock::now();
+            elapsed_time = end_time - start_time;
+            time_file << elapsed_time.count() << " "; 
             time_file << std::endl;
         }
         time_file.close();

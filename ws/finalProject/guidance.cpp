@@ -5,12 +5,13 @@
 // @brief Planning algorithm, returns a valid path using the range finder for planning
 amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingCar& agent) {
     // Write waypoints to a file
-    std::ofstream data_file, flag_file;
+    std::ofstream data_file, flag_file, goal_file;
     data_file.open("../../file_dump/adaptive.txt");
     flag_file.open("../../file_dump/adaptive_flag.txt");
+    goal_file.open("../../file_dump/adaptive_goalIndex.txt");
 
     // Check if the file opened correctly
-    if (!data_file.is_open() || !flag_file.is_open()) {
+    if (!data_file.is_open() || !flag_file.is_open() || !goal_file.is_open()) {
         std::cerr << "Error opening file" << std::endl;
     } else {
         std::cout << "File opened successfully" << std::endl;
@@ -22,6 +23,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
 
     // Path propagation lookahead value
     int path_propagation_value = 4;
+    int goal_lookahead = 20;
     
     // Get the subproblem
     generateEnv sub;
@@ -43,7 +45,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     std::vector<Eigen::Vector2d> current_waypoints = path_init.waypoints;
     Eigen::Vector2d q_curr = problem.q_init;
     int curr_index = 0;
-    int intermediate_goal_index = curr_index + 20;  // Heuristic lookahead value
+    int intermediate_goal_index = curr_index + goal_lookahead;  // Heuristic lookahead value
 
     // Write initial waypoints to a file
     writeWaypointsToFile(current_waypoints, data_file);
@@ -65,7 +67,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
             int subproblem_start;
             if(curr_index + path_propagation_value < current_waypoints.size()) {
                 subproblem_start = curr_index + path_propagation_value; //look-ahead
-                intermediate_goal_index = subproblem_start + 20;
+                intermediate_goal_index = subproblem_start + goal_lookahead;
             } else {
                 subproblem_start = curr_index; //stop and calculate
                 intermediate_goal_index = current_waypoints.size() - 1;
@@ -76,6 +78,9 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
             if(intermediate_goal_index >= current_waypoints.size()) {
                 intermediate_goal_index = current_waypoints.size() - 1;
             }
+
+            // Write the goal index to the file
+            goal_file << intermediate_goal_index << std::endl;
 
             // Create a new subproblem
             amp::Problem2D new_subproblem = sub.createSubproblem(problem, current_waypoints[subproblem_start], current_waypoints[intermediate_goal_index], agent);
@@ -104,7 +109,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
 
         // Move forward
         curr_index++;
-        intermediate_goal_index = curr_index + 20;
+        intermediate_goal_index = curr_index + goal_lookahead;
         q_curr = current_waypoints[curr_index];
         std::cout << "Moving to new waypoint: " << curr_index << std::endl;
     }
@@ -115,6 +120,7 @@ amp::Path2D adaptiveRRT::plan(const amp::Problem2D& problem, const rangeFindingC
     // Close the file
     data_file.close();
     flag_file.close();
+    goal_file.close();
 
     return final_path;
 }
